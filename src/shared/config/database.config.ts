@@ -1,0 +1,44 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import {
+  UsuarioEntity,
+  RolEntity,
+  UsuarioRolEntity,
+  SesionEntity,
+  IntentoAccesoEntity,
+  TokenRecuperacionEntity,
+  VisitaEntity,
+} from '../../infrastructure/database/entities';
+
+@Injectable()
+export class DatabaseConfigService implements TypeOrmOptionsFactory {
+  constructor(private configService: ConfigService) {}
+
+  createTypeOrmOptions(): TypeOrmModuleOptions {
+    return {
+      type: 'mysql',
+      host: this.configService.get<string>('DB_HOST'),
+      port: this.configService.get<number>('DB_PORT'),
+      username: this.configService.get<string>('DB_USERNAME'),
+      password: this.configService.get<string>('DB_PASSWORD'),
+      database: this.configService.get<string>('DB_DATABASE'),
+      entities: [
+        UsuarioEntity,
+        RolEntity,
+        UsuarioRolEntity,
+        SesionEntity,
+        IntentoAccesoEntity,
+        TokenRecuperacionEntity,
+        VisitaEntity,
+      ],
+      synchronize: this.configService.get<string>('NODE_ENV') === 'development',
+      logging: this.configService.get<string>('NODE_ENV') === 'development',
+      timezone: 'Z',
+      charset: 'utf8mb4',
+      extra: {
+        connectionLimit: 10,
+      },
+    };
+  }
+}

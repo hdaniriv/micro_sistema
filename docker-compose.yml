@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mysql_PrincipalContainer:
+    image: mysql:8.0
+    container_name: mysql_PrincipalContainer
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'G3sti0n..$45'
+      MYSQL_DATABASE: gestion_sistema
+      MYSQL_USER: gestion_user
+      MYSQL_PASSWORD: 'G3sti0n..$45'
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - gestion_network
+    command: --default-authentication-plugin=mysql_native_password
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  gestion_network:
+    driver: bridge
