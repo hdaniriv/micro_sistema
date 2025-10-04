@@ -27,7 +27,18 @@ Este es el microservicio principal del sistema de gestión empresarial, desarrol
 npm install
 ```
 
-### 2. Iniciar la base de datos MySQL
+### 2. Configurar variables de entorno
+```bash
+# Copiar archivo de ejemplo
+cp .env.example .env.development
+
+# Editar el archivo con tus configuraciones
+# Ver ENV_SETUP.md para instrucciones detalladas
+```
+
+**⚠️ IMPORTANTE:** Los archivos `.env.development` y `.env.production` no están en el repositorio por seguridad. Debes crear tus propios archivos usando `.env.example` como plantilla.
+
+### 3. Iniciar la base de datos MySQL
 ```bash
 docker-compose up -d
 ```

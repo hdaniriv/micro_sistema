@@ -39,8 +39,13 @@ jspm_packages/
 # Optional eslint cache
 .eslintcache
 
-# Environment variables
+# Environment variables (NUNCA commitear archivos con credenciales reales)
 .env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.staging
 .env.*.local
 .env.development.local
 .env.production.local
