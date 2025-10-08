@@ -9,14 +9,15 @@ import { CreateUsuarioDto, UsuarioResponseDto } from '../dto';
 export class PublicController {
   constructor(
     private readonly usuarioService: UsuarioService,
-    private readonly rolService: RolService,
+    private readonly rolService: RolService
   ) {}
 
   @Post('register/cliente')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Registro público de cliente',
-    description: 'Permite a cualquier persona registrarse como cliente en el sistema'
+    description:
+      'Permite a cualquier persona registrarse como cliente en el sistema',
   })
   @ApiBody({ type: CreateUsuarioDto })
   @ApiResponse({
@@ -28,10 +29,12 @@ export class PublicController {
     status: 409,
     description: 'El usuario ya existe',
   })
-  async registerCliente(@Body() createUsuarioDto: CreateUsuarioDto): Promise<UsuarioResponseDto> {
+  async registerCliente(
+    @Body() createUsuarioDto: CreateUsuarioDto
+  ): Promise<UsuarioResponseDto> {
     // Crear el usuario
     const newUser = await this.usuarioService.create(createUsuarioDto);
-    
+
     // Buscar el rol de Cliente
     const clienteRole = await this.rolService.findByName('Cliente');
     if (clienteRole) {

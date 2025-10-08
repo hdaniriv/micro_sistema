@@ -1,22 +1,22 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
   UseGuards,
   Request,
-  ParseIntPipe
+  ParseIntPipe,
 } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiBody
+  ApiBody,
 } from '@nestjs/swagger';
 import { RolService } from '../../application/roles/rol.service';
 import { CreateRolDto, UpdateRolDto, RolResponseDto } from '../dto';
@@ -32,9 +32,9 @@ export class RolController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles('Administrador', 'Supervisor')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener todos los roles',
-    description: 'Retorna una lista con todos los roles del sistema'
+    description: 'Retorna una lista con todos los roles del sistema',
   })
   @ApiResponse({
     status: 200,
@@ -48,9 +48,9 @@ export class RolController {
   @Get('system')
   @UseGuards(RolesGuard)
   @Roles('Administrador', 'Supervisor')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener roles del sistema',
-    description: 'Retorna una lista con los roles predefinidos del sistema'
+    description: 'Retorna una lista con los roles predefinidos del sistema',
   })
   @ApiResponse({
     status: 200,
@@ -64,9 +64,9 @@ export class RolController {
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles('Administrador', 'Supervisor')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener rol por ID',
-    description: 'Retorna la información de un rol específico'
+    description: 'Retorna la información de un rol específico',
   })
   @ApiParam({ name: 'id', description: 'ID del rol' })
   @ApiResponse({
@@ -78,16 +78,18 @@ export class RolController {
     status: 404,
     description: 'Rol no encontrado',
   })
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<RolResponseDto> {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<RolResponseDto> {
     return this.rolService.findById(id);
   }
 
   @Post()
   @UseGuards(RolesGuard)
   @Roles('Administrador')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Crear nuevo rol',
-    description: 'Crea un nuevo rol en el sistema'
+    description: 'Crea un nuevo rol en el sistema',
   })
   @ApiBody({ type: CreateRolDto })
   @ApiResponse({
@@ -109,9 +111,9 @@ export class RolController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('Administrador')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Actualizar rol',
-    description: 'Actualiza la información de un rol existente'
+    description: 'Actualiza la información de un rol existente',
   })
   @ApiParam({ name: 'id', description: 'ID del rol' })
   @ApiBody({ type: UpdateRolDto })
@@ -134,9 +136,10 @@ export class RolController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('Administrador')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Eliminar rol',
-    description: 'Elimina un rol del sistema (no se pueden eliminar roles del sistema)'
+    description:
+      'Elimina un rol del sistema (no se pueden eliminar roles del sistema)',
   })
   @ApiParam({ name: 'id', description: 'ID del rol' })
   @ApiResponse({

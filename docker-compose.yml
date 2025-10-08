@@ -11,10 +11,10 @@ services:
       MYSQL_USER: gestion_user
       MYSQL_PASSWORD: 'G3sti0n..$45'
     ports:
-      - "3307:3306"
+      - '3307:3306'
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      #- ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - gestion_network
     command: --default-authentication-plugin=mysql_native_password

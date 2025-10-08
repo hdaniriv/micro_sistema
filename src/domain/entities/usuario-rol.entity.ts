@@ -1,21 +1,13 @@
-export class UsuarioRol {
-  id: number;
+import { BaseEntity } from './base.entity';
+
+export class UsuarioRol extends BaseEntity {
   idUsuario: number;
   idRol: number;
-  fechaCreacion: Date;
-  fechaModificacion: Date;
-  idUsuarioCreador?: number;
 
-  constructor(
-    idUsuario: number,
-    idRol: number,
-    idUsuarioCreador?: number
-  ) {
+  constructor(idUsuario: number, idRol: number, idUsuarioCreador?: number) {
+    super(idUsuarioCreador);
     this.idUsuario = idUsuario;
     this.idRol = idRol;
-    this.fechaCreacion = new Date();
-    this.fechaModificacion = new Date();
-    this.idUsuarioCreador = idUsuarioCreador;
   }
 
   isValidAssignment(): boolean {

@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UsuarioRolEntity } from '../entities/usuario-rol.entity';
-import { IUsuarioRolRepository } from '../../../domain/repositories/usuario-rol.repository.interface';
-import { UsuarioRol } from '../../../domain/entities/usuario-rol.entity';
+import { UsuarioRolEntity } from '../database/entities/usuario-rol.entity';
+import { IUsuarioRolRepository } from '../../domain/repositories/usuario-rol.repository.interface';
+import { UsuarioRol } from '../../domain/entities/usuario-rol.entity';
 
 @Injectable()
 export class UsuarioRolRepository implements IUsuarioRolRepository {
   constructor(
     @InjectRepository(UsuarioRolEntity)
-    private readonly usuarioRolEntityRepository: Repository<UsuarioRolEntity>,
+    private readonly usuarioRolEntityRepository: Repository<UsuarioRolEntity>
   ) {}
 
   async findAll(): Promise<UsuarioRol[]> {
@@ -18,17 +18,23 @@ export class UsuarioRolRepository implements IUsuarioRolRepository {
   }
 
   async findById(id: number): Promise<UsuarioRol | null> {
-    const entity = await this.usuarioRolEntityRepository.findOne({ where: { id } });
+    const entity = await this.usuarioRolEntityRepository.findOne({
+      where: { id },
+    });
     return entity ? this.toDomainEntity(entity) : null;
   }
 
   async findByUserId(userId: number): Promise<UsuarioRol[]> {
-    const entities = await this.usuarioRolEntityRepository.find({ where: { idUsuario: userId } });
+    const entities = await this.usuarioRolEntityRepository.find({
+      where: { idUsuario: userId },
+    });
     return entities.map(this.toDomainEntity);
   }
 
   async findByRoleId(roleId: number): Promise<UsuarioRol[]> {
-    const entities = await this.usuarioRolEntityRepository.find({ where: { idRol: roleId } });
+    const entities = await this.usuarioRolEntityRepository.find({
+      where: { idRol: roleId },
+    });
     return entities.map(this.toDomainEntity);
   }
 
@@ -46,7 +52,7 @@ export class UsuarioRolRepository implements IUsuarioRolRepository {
   async deleteByUserAndRole(userId: number, roleId: number): Promise<boolean> {
     const result = await this.usuarioRolEntityRepository.delete({
       idUsuario: userId,
-      idRol: roleId
+      idRol: roleId,
     });
     return result.affected > 0;
   }
@@ -54,19 +60,23 @@ export class UsuarioRolRepository implements IUsuarioRolRepository {
   async findUserRoles(userId: number): Promise<UsuarioRol[]> {
     const entities = await this.usuarioRolEntityRepository.find({
       where: { idUsuario: userId },
-      relations: ['rol']
+      relations: ['rol'],
     });
     return entities.map(this.toDomainEntity);
   }
 
   async existsUserRole(userId: number, roleId: number): Promise<boolean> {
     const count = await this.usuarioRolEntityRepository.count({
-      where: { idUsuario: userId, idRol: roleId }
+      where: { idUsuario: userId, idRol: roleId },
     });
     return count > 0;
   }
 
-  async assignRole(userId: number, roleId: number, creatorId?: number): Promise<UsuarioRol> {
+  async assignRole(
+    userId: number,
+    roleId: number,
+    creatorId?: number
+  ): Promise<UsuarioRol> {
     const usuarioRol = new UsuarioRol(userId, roleId, creatorId);
     return this.create(usuarioRol);
   }

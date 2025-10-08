@@ -1,19 +1,29 @@
-import { Injectable, Inject, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  BadRequestException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { IRolRepository } from '../../domain/repositories/rol.repository.interface';
 import { Rol } from '../../domain/entities/rol.entity';
-import { CreateRolDto, UpdateRolDto, RolResponseDto } from '../../presentation/dto';
+import {
+  CreateRolDto,
+  UpdateRolDto,
+  RolResponseDto,
+} from '../../presentation/dto';
 import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class RolService {
   constructor(
     @Inject('IRolRepository')
-    private readonly rolRepository: IRolRepository,
+    private readonly rolRepository: IRolRepository
   ) {}
 
   async findAll(): Promise<RolResponseDto[]> {
     const roles = await this.rolRepository.findAll();
-    return roles.map(rol => 
+    return roles.map(rol =>
       plainToClass(RolResponseDto, rol, { excludeExtraneousValues: true })
     );
   }
@@ -27,7 +37,10 @@ export class RolService {
     return plainToClass(RolResponseDto, rol, { excludeExtraneousValues: true });
   }
 
-  async create(createRolDto: CreateRolDto, creatorId?: number): Promise<RolResponseDto> {
+  async create(
+    createRolDto: CreateRolDto,
+    creatorId?: number
+  ): Promise<RolResponseDto> {
     const { nombre, descripcion } = createRolDto;
 
     // Verificar que el nombre no exista
@@ -40,10 +53,15 @@ export class RolService {
     const rol = new Rol(nombre, descripcion, creatorId);
     const savedRol = await this.rolRepository.create(rol);
 
-    return plainToClass(RolResponseDto, savedRol, { excludeExtraneousValues: true });
+    return plainToClass(RolResponseDto, savedRol, {
+      excludeExtraneousValues: true,
+    });
   }
 
-  async update(id: number, updateRolDto: UpdateRolDto): Promise<RolResponseDto> {
+  async update(
+    id: number,
+    updateRolDto: UpdateRolDto
+  ): Promise<RolResponseDto> {
     const existingRol = await this.rolRepository.findById(id);
     if (!existingRol) {
       throw new NotFoundException('Rol no encontrado');
@@ -51,7 +69,9 @@ export class RolService {
 
     // Verificar nombre único si se está actualizando
     if (updateRolDto.nombre && updateRolDto.nombre !== existingRol.nombre) {
-      const existingRolByName = await this.rolRepository.existsByName(updateRolDto.nombre);
+      const existingRolByName = await this.rolRepository.existsByName(
+        updateRolDto.nombre
+      );
       if (existingRolByName) {
         throw new ConflictException('Ya existe un rol con este nombre');
       }
@@ -62,7 +82,9 @@ export class RolService {
       throw new BadRequestException('Error al actualizar el rol');
     }
 
-    return plainToClass(RolResponseDto, updatedRol, { excludeExtraneousValues: true });
+    return plainToClass(RolResponseDto, updatedRol, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async delete(id: number): Promise<void> {
@@ -84,7 +106,7 @@ export class RolService {
 
   async findSystemRoles(): Promise<RolResponseDto[]> {
     const roles = await this.rolRepository.findSystemRoles();
-    return roles.map(rol => 
+    return roles.map(rol =>
       plainToClass(RolResponseDto, rol, { excludeExtraneousValues: true })
     );
   }

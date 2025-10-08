@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import {
-  UsuarioEntity,
-  RolEntity,
-  UsuarioRolEntity,
-  SesionEntity,
   IntentoAccesoEntity,
+  RolEntity,
+  SesionEntity,
   TokenRecuperacionEntity,
+  UsuarioEntity,
+  UsuarioRolEntity,
   VisitaEntity,
 } from '../../infrastructure/database/entities';
 
@@ -33,7 +33,7 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
         VisitaEntity,
       ],
       synchronize: this.configService.get<string>('NODE_ENV') === 'development',
-      logging: this.configService.get<string>('NODE_ENV') === 'development',
+      logging: ['error'],
       timezone: 'Z',
       charset: 'utf8mb4',
       extra: {

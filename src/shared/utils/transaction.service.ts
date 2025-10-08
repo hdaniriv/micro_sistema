@@ -25,10 +25,8 @@ export class TransactionService {
     }
   }
 
-  async executeInTransaction<T>(
-    operation: () => Promise<T>
-  ): Promise<T> {
-    return this.dataSource.transaction(async (manager) => {
+  async executeInTransaction<T>(operation: () => Promise<T>): Promise<T> {
+    return this.dataSource.transaction(async manager => {
       return operation();
     });
   }

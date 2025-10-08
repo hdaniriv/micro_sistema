@@ -1,4 +1,10 @@
-import { IsString, IsEmail, IsOptional, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateUsuarioDto {
@@ -6,7 +12,7 @@ export class CreateUsuarioDto {
     description: 'Nombre de usuario único',
     example: 'usuario123',
     minLength: 3,
-    maxLength: 50
+    maxLength: 50,
   })
   @IsString()
   @MinLength(3)
@@ -17,7 +23,7 @@ export class CreateUsuarioDto {
     description: 'Contraseña del usuario',
     example: 'miPassword123',
     minLength: 6,
-    maxLength: 100
+    maxLength: 100,
   })
   @IsString()
   @MinLength(6)
@@ -26,7 +32,7 @@ export class CreateUsuarioDto {
 
   @ApiPropertyOptional({
     description: 'Correo electrónico del usuario',
-    example: 'usuario@email.com'
+    example: 'usuario@email.com',
   })
   @IsOptional()
   @IsEmail()
@@ -35,7 +41,7 @@ export class CreateUsuarioDto {
 
   @ApiPropertyOptional({
     description: 'Nombre completo del usuario',
-    example: 'Juan Pérez'
+    example: 'Juan Pérez',
   })
   @IsOptional()
   @IsString()

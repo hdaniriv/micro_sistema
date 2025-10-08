@@ -10,6 +10,10 @@ export interface IUsuarioRolRepository {
   deleteByUserAndRole(userId: number, roleId: number): Promise<boolean>;
   findUserRoles(userId: number): Promise<UsuarioRol[]>;
   existsUserRole(userId: number, roleId: number): Promise<boolean>;
-  assignRole(userId: number, roleId: number, creatorId?: number): Promise<UsuarioRol>;
+  assignRole(
+    userId: number,
+    roleId: number,
+    creatorId?: number
+  ): Promise<UsuarioRol>;
   removeRole(userId: number, roleId: number): Promise<boolean>;
 }

@@ -1,11 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { BaseEntity } from './base.entity';
 import { UsuarioEntity } from './usuario.entity';
 
 @Entity('Sesion')
-export class SesionEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class SesionEntity extends BaseEntity {
   @Column()
   idUsuario: number;
 
@@ -23,15 +21,6 @@ export class SesionEntity {
 
   @Column({ length: 255, nullable: true })
   userAgent?: string;
-
-  @CreateDateColumn()
-  fechaCreacion: Date;
-
-  @UpdateDateColumn()
-  fechaModificacion: Date;
-
-  @Column({ nullable: true })
-  idUsuarioCreador?: number;
 
   @ManyToOne(() => UsuarioEntity, usuario => usuario.sesiones)
   @JoinColumn({ name: 'idUsuario' })

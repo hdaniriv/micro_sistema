@@ -1,44 +1,27 @@
 export class Visita {
-  id: number;
-  idUsuario?: number;
+  id?: number;
+  idUsuario: number;
+  username: string;
   fecha: Date;
   ip?: string;
-  userAgent?: string;
-  pagina?: string;
-  detalles?: string;
-  fechaCreacion: Date;
-  fechaModificacion: Date;
-  idUsuarioCreador?: number;
+  dispositivo?: string;
 
   constructor(
-    pagina?: string,
-    idUsuario?: number,
+    idUsuario: number,
+    username: string,
     ip?: string,
-    userAgent?: string,
-    detalles?: string,
-    idUsuarioCreador?: number
+    dispositivo?: string
   ) {
     this.idUsuario = idUsuario;
+    this.username = username;
     this.fecha = new Date();
     this.ip = ip;
-    this.userAgent = userAgent;
-    this.pagina = pagina;
-    this.detalles = detalles;
-    this.fechaCreacion = new Date();
-    this.fechaModificacion = new Date();
-    this.idUsuarioCreador = idUsuarioCreador;
+    this.dispositivo = dispositivo;
   }
 
-  isAnonymous(): boolean {
-    return !this.idUsuario;
-  }
-
-  isFromUser(): boolean {
-    return !!this.idUsuario;
-  }
-
-  updateDetails(detalles: string): void {
-    this.detalles = detalles;
-    this.fechaModificacion = new Date();
+  isFromMobileDevice(): boolean {
+    if (!this.dispositivo) return false;
+    
+    return /Mobile|Android|iPhone|iPad|Windows Phone/i.test(this.dispositivo);
   }
 }

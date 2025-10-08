@@ -15,7 +15,9 @@ import {
   UsuarioRepository,
   RolRepository,
   UsuarioRolRepository,
-} from './database/repositories';
+  IntentoAccesoRepository,
+  VisitaRepository,
+} from './repositories';
 
 @Module({
   imports: [
@@ -46,11 +48,21 @@ import {
       provide: 'IUsuarioRolRepository',
       useClass: UsuarioRolRepository,
     },
+    {
+      provide: 'IIntentoAccesoRepository',
+      useClass: IntentoAccesoRepository,
+    },
+    {
+      provide: 'IVisitaRepository',
+      useClass: VisitaRepository,
+    },
   ],
   exports: [
     'IUsuarioRepository',
     'IRolRepository',
     'IUsuarioRolRepository',
+    'IIntentoAccesoRepository',
+    'IVisitaRepository',
     TypeOrmModule,
   ],
 })

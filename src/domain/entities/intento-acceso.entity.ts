@@ -1,43 +1,29 @@
 export class IntentoAcceso {
-  id: number;
-  idUsuario?: number;
+  id?: number;
+  username: string;
+  password: string;
   fecha: Date;
-  exito: boolean;
   ip?: string;
-  userAgent?: string;
-  motivo?: string;
-  fechaCreacion: Date;
-  fechaModificacion: Date;
-  idUsuarioCreador?: number;
+  dispositivo?: string;
 
   constructor(
-    exito: boolean,
-    idUsuario?: number,
+    username: string,
+    password: string,
     ip?: string,
-    userAgent?: string,
-    motivo?: string,
-    idUsuarioCreador?: number
+    dispositivo?: string
   ) {
-    this.idUsuario = idUsuario;
+    this.username = username;
+    this.password = password;
     this.fecha = new Date();
-    this.exito = exito;
     this.ip = ip;
-    this.userAgent = userAgent;
-    this.motivo = motivo;
-    this.fechaCreacion = new Date();
-    this.fechaModificacion = new Date();
-    this.idUsuarioCreador = idUsuarioCreador;
-  }
-
-  wasSuccessful(): boolean {
-    return this.exito;
+    this.dispositivo = dispositivo;
   }
 
   isSuspicious(): boolean {
-    return !this.exito && (
-      this.motivo?.includes('password') ||
-      this.motivo?.includes('brute') ||
-      this.motivo?.includes('blocked')
+    return (
+      this.password?.length < 3 ||
+      this.username?.includes('admin') ||
+      this.username?.includes('root')
     );
   }
 }

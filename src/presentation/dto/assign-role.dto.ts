@@ -5,7 +5,7 @@ import { Type } from 'class-transformer';
 export class AssignRoleDto {
   @ApiProperty({
     description: 'ID del usuario al que se asignará el rol',
-    example: 1
+    example: 1,
   })
   @Type(() => Number)
   @IsInt()
@@ -14,7 +14,7 @@ export class AssignRoleDto {
 
   @ApiProperty({
     description: 'ID del rol a asignar',
-    example: 2
+    example: 2,
   })
   @Type(() => Number)
   @IsInt()

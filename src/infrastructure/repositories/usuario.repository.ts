@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UsuarioEntity } from '../entities/usuario.entity';
-import { IUsuarioRepository } from '../../../domain/repositories/usuario.repository.interface';
-import { Usuario } from '../../../domain/entities/usuario.entity';
+import { UsuarioEntity } from '../database/entities/usuario.entity';
+import { IUsuarioRepository } from '../../domain/repositories/usuario.repository.interface';
+import { Usuario } from '../../domain/entities/usuario.entity';
 
 @Injectable()
 export class UsuarioRepository implements IUsuarioRepository {
   constructor(
     @InjectRepository(UsuarioEntity)
-    private readonly usuarioEntityRepository: Repository<UsuarioEntity>,
+    private readonly usuarioEntityRepository: Repository<UsuarioEntity>
   ) {}
 
   async findAll(): Promise<Usuario[]> {
@@ -18,17 +18,23 @@ export class UsuarioRepository implements IUsuarioRepository {
   }
 
   async findById(id: number): Promise<Usuario | null> {
-    const entity = await this.usuarioEntityRepository.findOne({ where: { id } });
+    const entity = await this.usuarioEntityRepository.findOne({
+      where: { id },
+    });
     return entity ? this.toDomainEntity(entity) : null;
   }
 
   async findByUsername(username: string): Promise<Usuario | null> {
-    const entity = await this.usuarioEntityRepository.findOne({ where: { username } });
+    const entity = await this.usuarioEntityRepository.findOne({
+      where: { username },
+    });
     return entity ? this.toDomainEntity(entity) : null;
   }
 
   async findByEmail(email: string): Promise<Usuario | null> {
-    const entity = await this.usuarioEntityRepository.findOne({ where: { email } });
+    const entity = await this.usuarioEntityRepository.findOne({
+      where: { email },
+    });
     return entity ? this.toDomainEntity(entity) : null;
   }
 
@@ -40,7 +46,9 @@ export class UsuarioRepository implements IUsuarioRepository {
 
   async update(id: number, usuario: Partial<Usuario>): Promise<Usuario | null> {
     await this.usuarioEntityRepository.update(id, usuario as any);
-    const updatedEntity = await this.usuarioEntityRepository.findOne({ where: { id } });
+    const updatedEntity = await this.usuarioEntityRepository.findOne({
+      where: { id },
+    });
     return updatedEntity ? this.toDomainEntity(updatedEntity) : null;
   }
 
@@ -55,22 +63,28 @@ export class UsuarioRepository implements IUsuarioRepository {
       .innerJoin('usuario.usuarioRoles', 'usuarioRol')
       .where('usuarioRol.idRol = :roleId', { roleId })
       .getMany();
-    
+
     return entities.map(this.toDomainEntity);
   }
 
   async findActiveUsers(): Promise<Usuario[]> {
-    const entities = await this.usuarioEntityRepository.find({ where: { activo: true } });
+    const entities = await this.usuarioEntityRepository.find({
+      where: { activo: true },
+    });
     return entities.map(this.toDomainEntity);
   }
 
   async existsByUsername(username: string): Promise<boolean> {
-    const count = await this.usuarioEntityRepository.count({ where: { username } });
+    const count = await this.usuarioEntityRepository.count({
+      where: { username },
+    });
     return count > 0;
   }
 
   async existsByEmail(email: string): Promise<boolean> {
-    const count = await this.usuarioEntityRepository.count({ where: { email } });
+    const count = await this.usuarioEntityRepository.count({
+      where: { email },
+    });
     return count > 0;
   }
 

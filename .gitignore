@@ -70,9 +70,21 @@ npm-debug.log
 yarn-debug.log
 pnpm-debug.log
 
+# Log files (mantener .gitkeep pero excluir logs)
+logs/*.log
+logs/*.txt
+!logs/.gitkeep
+
 # Testing
 test-results/
 .jest/
 
 # NestJS specific
 dist/
+
+# IMPORTANT: Configuration files that SHOULD be committed
+# .vscode/settings.json        - Include (project settings)
+# .prettierrc                  - Include (code formatting)
+# .eslintrc.json              - Include (linting rules)
+# setup-*.ps1 and setup-*.sh  - Include (setup scripts)
+# DEVELOPMENT_SETUP.md        - Include (setup documentation)

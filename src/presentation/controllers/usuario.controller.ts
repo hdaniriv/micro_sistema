@@ -1,31 +1,31 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
   UseGuards,
   Request,
   ParseIntPipe,
-  HttpStatus
+  HttpStatus,
 } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiBody
+  ApiBody,
 } from '@nestjs/swagger';
 import { UsuarioService } from '../../application/users/usuario.service';
-import { 
-  CreateUsuarioDto, 
-  UpdateUsuarioDto, 
+import {
+  CreateUsuarioDto,
+  UpdateUsuarioDto,
   UsuarioResponseDto,
   ChangePasswordDto,
-  AssignRoleDto 
+  AssignRoleDto,
 } from '../dto';
 import { JwtAuthGuard, RolesGuard, Roles } from '../guards';
 
@@ -39,9 +39,9 @@ export class UsuarioController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles('Administrador', 'Supervisor')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener todos los usuarios',
-    description: 'Retorna una lista con todos los usuarios del sistema'
+    description: 'Retorna una lista con todos los usuarios del sistema',
   })
   @ApiResponse({
     status: 200,
@@ -55,9 +55,9 @@ export class UsuarioController {
   @Get('active')
   @UseGuards(RolesGuard)
   @Roles('Administrador', 'Supervisor')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener usuarios activos',
-    description: 'Retorna una lista con todos los usuarios activos del sistema'
+    description: 'Retorna una lista con todos los usuarios activos del sistema',
   })
   @ApiResponse({
     status: 200,
@@ -71,9 +71,9 @@ export class UsuarioController {
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles('Administrador', 'Supervisor')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener usuario por ID',
-    description: 'Retorna la información de un usuario específico'
+    description: 'Retorna la información de un usuario específico',
   })
   @ApiParam({ name: 'id', description: 'ID del usuario' })
   @ApiResponse({
@@ -85,16 +85,18 @@ export class UsuarioController {
     status: 404,
     description: 'Usuario no encontrado',
   })
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<UsuarioResponseDto> {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<UsuarioResponseDto> {
     return this.usuarioService.findById(id);
   }
 
   @Post()
   @UseGuards(RolesGuard)
   @Roles('Administrador')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Crear nuevo usuario',
-    description: 'Crea un nuevo usuario en el sistema'
+    description: 'Crea un nuevo usuario en el sistema',
   })
   @ApiBody({ type: CreateUsuarioDto })
   @ApiResponse({
@@ -116,9 +118,9 @@ export class UsuarioController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('Administrador')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Actualizar usuario',
-    description: 'Actualiza la información de un usuario existente'
+    description: 'Actualiza la información de un usuario existente',
   })
   @ApiParam({ name: 'id', description: 'ID del usuario' })
   @ApiBody({ type: UpdateUsuarioDto })
@@ -141,9 +143,9 @@ export class UsuarioController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('Administrador')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Eliminar usuario',
-    description: 'Elimina un usuario del sistema'
+    description: 'Elimina un usuario del sistema',
   })
   @ApiParam({ name: 'id', description: 'ID del usuario' })
   @ApiResponse({
@@ -161,9 +163,9 @@ export class UsuarioController {
   @Post('assign-role')
   @UseGuards(RolesGuard)
   @Roles('Administrador')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Asignar rol a usuario',
-    description: 'Asigna un rol específico a un usuario'
+    description: 'Asigna un rol específico a un usuario',
   })
   @ApiBody({ type: AssignRoleDto })
   @ApiResponse({
@@ -183,8 +185,8 @@ export class UsuarioController {
     @Request() req: any
   ): Promise<void> {
     return this.usuarioService.assignRole(
-      assignRoleDto.idUsuario, 
-      assignRoleDto.idRol, 
+      assignRoleDto.idUsuario,
+      assignRoleDto.idRol,
       req.user.sub
     );
   }
@@ -192,9 +194,9 @@ export class UsuarioController {
   @Delete(':userId/roles/:roleId')
   @UseGuards(RolesGuard)
   @Roles('Administrador')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Remover rol de usuario',
-    description: 'Remueve un rol específico de un usuario'
+    description: 'Remueve un rol específico de un usuario',
   })
   @ApiParam({ name: 'userId', description: 'ID del usuario' })
   @ApiParam({ name: 'roleId', description: 'ID del rol' })
@@ -218,9 +220,9 @@ export class UsuarioController {
   }
 
   @Post('change-password')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Cambiar contraseña',
-    description: 'Permite al usuario cambiar su contraseña'
+    description: 'Permite al usuario cambiar su contraseña',
   })
   @ApiBody({ type: ChangePasswordDto })
   @ApiResponse({
@@ -241,9 +243,9 @@ export class UsuarioController {
   @Get(':id/roles')
   @UseGuards(RolesGuard)
   @Roles('Administrador', 'Supervisor')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Obtener roles de usuario',
-    description: 'Retorna los roles asignados a un usuario específico'
+    description: 'Retorna los roles asignados a un usuario específico',
   })
   @ApiParam({ name: 'id', description: 'ID del usuario' })
   @ApiResponse({

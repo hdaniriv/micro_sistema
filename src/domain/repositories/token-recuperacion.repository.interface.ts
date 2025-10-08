@@ -6,7 +6,10 @@ export interface ITokenRecuperacionRepository {
   findByUserId(userId: number): Promise<TokenRecuperacion[]>;
   findByToken(token: string): Promise<TokenRecuperacion | null>;
   create(tokenRecuperacion: TokenRecuperacion): Promise<TokenRecuperacion>;
-  update(id: number, tokenRecuperacion: Partial<TokenRecuperacion>): Promise<TokenRecuperacion | null>;
+  update(
+    id: number,
+    tokenRecuperacion: Partial<TokenRecuperacion>
+  ): Promise<TokenRecuperacion | null>;
   delete(id: number): Promise<boolean>;
   findValidTokens(userId: number): Promise<TokenRecuperacion[]>;
   markAsUsed(token: string): Promise<boolean>;

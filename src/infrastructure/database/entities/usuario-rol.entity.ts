@@ -1,26 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { BaseEntity } from './base.entity';
 import { UsuarioEntity } from './usuario.entity';
 import { RolEntity } from './rol.entity';
 
 @Entity('UsuarioRol')
-export class UsuarioRolEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class UsuarioRolEntity extends BaseEntity {
   @Column()
   idUsuario: number;
 
   @Column()
   idRol: number;
-
-  @CreateDateColumn()
-  fechaCreacion: Date;
-
-  @UpdateDateColumn()
-  fechaModificacion: Date;
-
-  @Column({ nullable: true })
-  idUsuarioCreador?: number;
 
   @ManyToOne(() => UsuarioEntity, usuario => usuario.usuarioRoles)
   @JoinColumn({ name: 'idUsuario' })

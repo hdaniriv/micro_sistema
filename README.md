@@ -22,12 +22,37 @@ Este es el microservicio principal del sistema de gestión empresarial, desarrol
 
 ## ⚙️ Instalación
 
+### 🚀 Setup Automático (Recomendado)
+
+Para configurar todo el entorno de desarrollo automáticamente:
+
+**Windows:**
+
+```powershell
+.\setup-development.ps1
+```
+
+**Linux/Mac:**
+
+```bash
+chmod +x setup-development.sh
+./setup-development.sh
+```
+
+Este script instalará dependencias, configurará VS Code, iniciará la base de datos y verificará que todo funcione correctamente.
+
+### 📋 Setup Manual
+
+Si prefieres configurar manualmente:
+
 ### 1. Instalar dependencias
+
 ```bash
 npm install
 ```
 
 ### 2. Configurar variables de entorno
+
 ```bash
 # Copiar archivo de ejemplo
 cp .env.example .env.development
@@ -38,29 +63,41 @@ cp .env.example .env.development
 
 **⚠️ IMPORTANTE:** Los archivos `.env.development` y `.env.production` no están en el repositorio por seguridad. Debes crear tus propios archivos usando `.env.example` como plantilla.
 
-### 3. Iniciar la base de datos MySQL
+### 3. Configurar VS Code
+
+```bash
+# Windows
+.\setup-vscode-extensions.ps1
+
+# Linux/Mac
+chmod +x setup-vscode-extensions.sh
+./setup-vscode-extensions.sh
+```
+
+### 4. Iniciar la base de datos MySQL
+
 ```bash
 docker-compose up -d
 ```
 
 ### 3. Iniciar la aplicación
+
 ```bash
 npm run start:dev
 ```
 
-## 📚 Documentación API
+## � Documentación
 
-http://localhost:3000/api/docs
+- **API Documentation**: Disponible en `http://localhost:3000/api/docs` (Swagger)
+- **Arquitectura DDD**: El proyecto sigue principios de Domain-Driven Design
+- **Autenticación JWT**: Sistema de tokens para autenticación y autorización
 
-## 🔐 Autenticación
+## 🔧 Archivos de Configuración
 
-Usuario administrador por defecto:
-- Username: `admin`
-- Password: `admin123`
-
-## 🎯 Endpoints Principales
-
-- `POST /api/auth/login` - Iniciar sesión
-- `POST /api/public/register/cliente` - Registro público de clientes
-- `GET /api/usuarios` - Gestión de usuarios (requiere auth)
-- `GET /api/roles` - Gestión de roles (requiere auth)
+- **`DEVELOPMENT_SETUP.md`**: Guía completa para configurar el entorno de desarrollo
+- **`ENV_SETUP.md`**: Instrucciones para configurar variables de entorno
+- **`setup-development.ps1/sh`**: Scripts para configuración automática completa
+- **`setup-vscode-extensions.ps1/sh`**: Scripts para instalar extensiones de VS Code
+- **`.vscode/settings.json`**: Configuraciones de VS Code para el proyecto
+- **`.prettierrc`**: Configuración de formateo de código
+- **`.eslintrc.json`**: Reglas de linting para TypeScript

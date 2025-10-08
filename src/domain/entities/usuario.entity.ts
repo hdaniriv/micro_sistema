@@ -1,13 +1,11 @@
-export class Usuario {
-  id: number;
+import { BaseEntity } from './base.entity';
+
+export class Usuario extends BaseEntity {
   username: string;
   password: string;
   email?: string;
   nombre?: string;
   activo: boolean;
-  fechaCreacion: Date;
-  fechaModificacion: Date;
-  idUsuarioCreador?: number;
 
   constructor(
     username: string,
@@ -16,14 +14,12 @@ export class Usuario {
     nombre?: string,
     idUsuarioCreador?: number
   ) {
+    super(idUsuarioCreador);
     this.username = username;
     this.password = password;
     this.email = email;
     this.nombre = nombre;
     this.activo = true;
-    this.fechaCreacion = new Date();
-    this.fechaModificacion = new Date();
-    this.idUsuarioCreador = idUsuarioCreador;
   }
 
   isActive(): boolean {
@@ -32,22 +28,22 @@ export class Usuario {
 
   deactivate(): void {
     this.activo = false;
-    this.fechaModificacion = new Date();
+    this.updateModificationDate();
   }
 
   activate(): void {
     this.activo = true;
-    this.fechaModificacion = new Date();
+    this.updateModificationDate();
   }
 
   updateProfile(email?: string, nombre?: string): void {
     if (email) this.email = email;
     if (nombre) this.nombre = nombre;
-    this.fechaModificacion = new Date();
+    this.updateModificationDate();
   }
 
   changePassword(newPassword: string): void {
     this.password = newPassword;
-    this.fechaModificacion = new Date();
+    this.updateModificationDate();
   }
 }

@@ -1,11 +1,10 @@
-export class TokenRecuperacion {
-  id: number;
+import { BaseEntity } from './base.entity';
+
+export class TokenRecuperacion extends BaseEntity {
   idUsuario: number;
   token: string;
-  fechaCreacion: Date;
   fechaExpiracion: Date;
   usado: boolean;
-  idUsuarioCreador?: number;
 
   constructor(
     idUsuario: number,
@@ -13,12 +12,13 @@ export class TokenRecuperacion {
     expirationHours: number = 2,
     idUsuarioCreador?: number
   ) {
+    super(idUsuarioCreador);
     this.idUsuario = idUsuario;
     this.token = token;
-    this.fechaCreacion = new Date();
-    this.fechaExpiracion = new Date(Date.now() + (expirationHours * 60 * 60 * 1000));
+    this.fechaExpiracion = new Date(
+      Date.now() + expirationHours * 60 * 60 * 1000
+    );
     this.usado = false;
-    this.idUsuarioCreador = idUsuarioCreador;
   }
 
   isValid(): boolean {

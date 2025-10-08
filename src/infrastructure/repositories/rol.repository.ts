@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RolEntity } from '../entities/rol.entity';
-import { IRolRepository } from '../../../domain/repositories/rol.repository.interface';
-import { Rol } from '../../../domain/entities/rol.entity';
+import { RolEntity } from '../database/entities/rol.entity';
+import { IRolRepository } from '../../domain/repositories/rol.repository.interface';
+import { Rol } from '../../domain/entities/rol.entity';
 
 @Injectable()
 export class RolRepository implements IRolRepository {
   constructor(
     @InjectRepository(RolEntity)
-    private readonly rolEntityRepository: Repository<RolEntity>,
+    private readonly rolEntityRepository: Repository<RolEntity>
   ) {}
 
   async findAll(): Promise<Rol[]> {
@@ -23,7 +23,9 @@ export class RolRepository implements IRolRepository {
   }
 
   async findByName(nombre: string): Promise<Rol | null> {
-    const entity = await this.rolEntityRepository.findOne({ where: { nombre } });
+    const entity = await this.rolEntityRepository.findOne({
+      where: { nombre },
+    });
     return entity ? this.toDomainEntity(entity) : null;
   }
 
@@ -35,7 +37,9 @@ export class RolRepository implements IRolRepository {
 
   async update(id: number, rol: Partial<Rol>): Promise<Rol | null> {
     await this.rolEntityRepository.update(id, rol as any);
-    const updatedEntity = await this.rolEntityRepository.findOne({ where: { id } });
+    const updatedEntity = await this.rolEntityRepository.findOne({
+      where: { id },
+    });
     return updatedEntity ? this.toDomainEntity(updatedEntity) : null;
   }
 
@@ -50,7 +54,7 @@ export class RolRepository implements IRolRepository {
       .createQueryBuilder('rol')
       .where('rol.nombre IN (:...nombres)', { nombres: systemRoles })
       .getMany();
-    
+
     return entities.map(this.toDomainEntity);
   }
 

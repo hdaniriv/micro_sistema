@@ -1,26 +1,18 @@
-export class Rol {
-  id: number;
+import { BaseEntity } from './base.entity';
+
+export class Rol extends BaseEntity {
   nombre: string;
   descripcion?: string;
-  fechaCreacion: Date;
-  fechaModificacion: Date;
-  idUsuarioCreador?: number;
 
-  constructor(
-    nombre: string,
-    descripcion?: string,
-    idUsuarioCreador?: number
-  ) {
+  constructor(nombre: string, descripcion?: string, idUsuarioCreador?: number) {
+    super(idUsuarioCreador);
     this.nombre = nombre;
     this.descripcion = descripcion;
-    this.fechaCreacion = new Date();
-    this.fechaModificacion = new Date();
-    this.idUsuarioCreador = idUsuarioCreador;
   }
 
   updateDescription(descripcion: string): void {
     this.descripcion = descripcion;
-    this.fechaModificacion = new Date();
+    this.updateModificationDate();
   }
 
   isSystemRole(): boolean {

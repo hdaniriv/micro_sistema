@@ -24,7 +24,9 @@ async function bootstrap() {
 
   // Configurar CORS
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN')?.split(',') || ['http://localhost:3000'],
+    origin: configService.get<string>('CORS_ORIGIN')?.split(',') || [
+      'http://localhost:3000',
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
@@ -34,10 +36,13 @@ async function bootstrap() {
 
   // Configurar Swagger
   const swaggerConfig = new DocumentBuilder()
-    .setTitle(configService.get<string>('SWAGGER_TITLE') || 'Microservicio Principal API')
+    .setTitle(
+      configService.get<string>('SWAGGER_TITLE') ||
+        'Microservicio Principal API'
+    )
     .setDescription(
-      configService.get<string>('SWAGGER_DESCRIPTION') || 
-      'API para gestión de usuarios, autenticación y coordinación del sistema'
+      configService.get<string>('SWAGGER_DESCRIPTION') ||
+        'API para gestión de usuarios, autenticación y coordinación del sistema'
     )
     .setVersion(configService.get<string>('SWAGGER_VERSION') || '1.0.0')
     .addBearerAuth(
@@ -49,7 +54,7 @@ async function bootstrap() {
         description: 'Ingrese el token JWT',
         in: 'header',
       },
-      'JWT-auth',
+      'JWT-auth'
     )
     .build();
 
@@ -62,15 +67,17 @@ async function bootstrap() {
   });
 
   const port = configService.get<number>('PORT') || 3000;
-  
-  console.log(`🚀 Microservicio Principal iniciado en puerto ${port}`);
-  console.log(`📖 Documentación Swagger disponible en: http://localhost:${port}/${swaggerPath}`);
-  console.log(`🌍 Entorno: ${configService.get<string>('NODE_ENV')}`);
-  
+
+  console.log(`\n=== Sistema de Gestión Iniciado ===`);
+  console.log(`Puerto: ${port}`);
+  console.log(`Entorno: ${configService.get<string>('NODE_ENV')}`);
+  console.log(`Swagger: http://localhost:${port}/${swaggerPath}`);
+  console.log(`===================================\n`);
+
   await app.listen(port);
 }
 
-bootstrap().catch((error) => {
+bootstrap().catch(error => {
   console.error('Error al iniciar la aplicación:', error);
   process.exit(1);
 });
