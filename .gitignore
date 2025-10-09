@@ -88,3 +88,8 @@ dist/
 # .eslintrc.json              - Include (linting rules)
 # setup-*.ps1 and setup-*.sh  - Include (setup scripts)
 # DEVELOPMENT_SETUP.md        - Include (setup documentation)
+
+# AI Context files (local use only)
+PROJECT_CONTEXT.md
+DEPENDENCY_MAP.md
+AI_PROTOCOL.md
