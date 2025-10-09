@@ -7,11 +7,13 @@ export class CryptoService {
   private readonly saltRounds: number;
 
   constructor(private configService: ConfigService) {
-    this.saltRounds = this.configService.get<number>('BCRYPT_ROUNDS') || 12;
+    const rounds = this.configService.get<string | number>('BCRYPT_ROUNDS');
+    this.saltRounds = typeof rounds === 'string' ? parseInt(rounds, 10) : (rounds || 12);
   }
 
   async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, this.saltRounds);
+    const salt = await bcrypt.genSalt(this.saltRounds);
+    return bcrypt.hash(password, salt);
   }
 
   async comparePassword(

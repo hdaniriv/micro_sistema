@@ -1,33 +1,32 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
-  Request,
+  Get,
+  Param,
   ParseIntPipe,
-  HttpStatus,
+  Patch,
+  Post,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
-  ApiParam,
   ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { UsuarioService } from '../../application/users/usuario.service';
 import {
+  AssignRoleDto,
+  ChangePasswordDto,
   CreateUsuarioDto,
   UpdateUsuarioDto,
   UsuarioResponseDto,
-  ChangePasswordDto,
-  AssignRoleDto,
 } from '../dto';
-import { JwtAuthGuard, RolesGuard, Roles } from '../guards';
+import { JwtAuthGuard, Roles, RolesGuard } from '../guards';
 
 @ApiTags('Usuarios')
 @Controller('usuarios')
@@ -37,7 +36,7 @@ export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
   @Get()
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Supervisor')
   @ApiOperation({
     summary: 'Obtener todos los usuarios',
@@ -53,7 +52,7 @@ export class UsuarioController {
   }
 
   @Get('active')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Supervisor')
   @ApiOperation({
     summary: 'Obtener usuarios activos',

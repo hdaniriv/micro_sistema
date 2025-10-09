@@ -45,16 +45,23 @@ export class UsuarioService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    return plainToClass(UsuarioResponseDto, usuario, {
+    const dto = plainToClass(UsuarioResponseDto, usuario, {
       excludeExtraneousValues: true,
     });
+    // Adjuntar roles del usuario
+    dto.roles = await this.getUserRoles(id);
+    return dto;
   }
 
   async create(
     createUsuarioDto: CreateUsuarioDto,
     creatorId?: number
   ): Promise<UsuarioResponseDto> {
-    const { username, password, email, nombre } = createUsuarioDto;
+    // Normalizar entradas: username/email en minúsculas y sin espacios
+    const username = createUsuarioDto.username?.trim().toLowerCase();
+    const password = createUsuarioDto.password;
+    const email = createUsuarioDto.email?.trim().toLowerCase();
+    const nombre = createUsuarioDto.nombre?.trim();
 
     // Verificar que el username no exista
     const existingUserByUsername =

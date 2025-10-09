@@ -82,14 +82,14 @@ test-results/
 # NestJS specific
 dist/
 
-# IMPORTANT: Configuration files that SHOULD be committed
+# Archivos y configuracion de desarrollo (incluir en el repositorio)
 # .vscode/settings.json        - Include (project settings)
 # .prettierrc                  - Include (code formatting)
 # .eslintrc.json              - Include (linting rules)
 # setup-*.ps1 and setup-*.sh  - Include (setup scripts)
 # DEVELOPMENT_SETUP.md        - Include (setup documentation)
 
-# AI Context files (local use only)
+# Archivos de contexto uso local
 PROJECT_CONTEXT.md
 DEPENDENCY_MAP.md
 AI_PROTOCOL.md

@@ -56,4 +56,12 @@ export class UsuarioResponseDto {
 
   @Exclude()
   idUsuarioCreador?: number;
+
+  @ApiPropertyOptional({
+    description: 'Roles asignados al usuario',
+    type: [String],
+    example: ['Administrador', 'Supervisor'],
+  })
+  @Expose()
+  roles?: string[];
 }

@@ -1,13 +1,8 @@
-import {
-  IsString,
-  IsEmail,
-  IsOptional,
-  IsBoolean,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsBoolean, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUsuarioDto } from './create-usuario.dto';
+import { Transform } from 'class-transformer';
 
 export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
   @ApiPropertyOptional({
@@ -16,6 +11,7 @@ export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
   })
   @IsOptional()
   @IsEmail()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
   @MaxLength(100)
   email?: string;
 
@@ -25,6 +21,7 @@ export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
   })
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @MaxLength(100)
   nombre?: string;
 
