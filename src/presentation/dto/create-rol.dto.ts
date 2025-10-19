@@ -1,5 +1,5 @@
-import { IsString, IsOptional, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateRolDto {
   @ApiProperty({
@@ -7,8 +7,10 @@ export class CreateRolDto {
     example: 'Administrador',
     maxLength: 50,
   })
-  @IsString()
-  @MaxLength(50)
+  @IsString({ message: 'El nombre del rol debe ser una cadena de texto' })
+  @MaxLength(50, {
+    message: 'El nombre del rol no puede superar 50 caracteres',
+  })
   nombre: string;
 
   @ApiPropertyOptional({
@@ -16,7 +18,7 @@ export class CreateRolDto {
     example: 'Acceso completo al sistema',
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(200)
+  @IsString({ message: 'La descripción debe ser una cadena de texto' })
+  @MaxLength(200, { message: 'La descripción no puede superar 200 caracteres' })
   descripcion?: string;
 }

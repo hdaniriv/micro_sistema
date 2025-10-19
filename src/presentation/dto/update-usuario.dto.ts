@@ -1,8 +1,14 @@
-import { IsString, IsEmail, IsOptional, IsBoolean, MaxLength } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateUsuarioDto } from './create-usuario.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEmail,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
+import { CreateUsuarioDto } from './create-usuario.dto';
 
 export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
   @ApiPropertyOptional({
@@ -10,9 +16,13 @@ export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
     example: 'usuario@email.com',
   })
   @IsOptional()
-  @IsEmail()
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
-  @MaxLength(100)
+  @IsEmail({}, { message: 'El correo electrónico no es válido' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value
+  )
+  @MaxLength(100, {
+    message: 'El correo electrónico no puede superar 100 caracteres',
+  })
   email?: string;
 
   @ApiPropertyOptional({
@@ -20,9 +30,9 @@ export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
     example: 'Juan Pérez',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'El nombre debe ser una cadena de texto' })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @MaxLength(100)
+  @MaxLength(100, { message: 'El nombre no puede superar 100 caracteres' })
   nombre?: string;
 
   @ApiPropertyOptional({
@@ -30,6 +40,6 @@ export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
     example: true,
   })
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'El campo activo debe ser verdadero o falso' })
   activo?: boolean;
 }

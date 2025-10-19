@@ -23,6 +23,7 @@ import {
   AssignRoleDto,
   ChangePasswordDto,
   CreateUsuarioDto,
+  ResetPasswordDto,
   UpdateUsuarioDto,
   UsuarioResponseDto,
 } from '../dto';
@@ -237,6 +238,31 @@ export class UsuarioController {
     @Request() req: any
   ): Promise<void> {
     return this.usuarioService.changePassword(req.user.sub, changePasswordDto);
+  }
+
+  @Post(':id/reset-password')
+  @UseGuards(RolesGuard)
+  @Roles('Administrador')
+  @ApiOperation({
+    summary: 'Resetear contraseña (admin)',
+    description:
+      'Permite a un administrador resetear la contraseña de un usuario sin requerir la contraseña actual',
+  })
+  @ApiParam({ name: 'id', description: 'ID del usuario' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Contraseña reseteada exitosamente',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usuario no encontrado',
+  })
+  async resetPassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() resetPasswordDto: ResetPasswordDto
+  ): Promise<void> {
+    return this.usuarioService.resetPassword(id, resetPasswordDto);
   }
 
   @Get(':id/roles')

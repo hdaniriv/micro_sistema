@@ -2,7 +2,7 @@
 
 Este es el microservicio principal del sistema de gestión empresarial, desarrollado con NestJS siguiendo arquitectura DDD (Domain-Driven Design). Se encarga de la gestión de usuarios, autenticación, autorización y coordinación con otros microservicios.
 
-## 🚀 Características
+## Características
 
 - **Arquitectura DDD**: Separación clara entre dominio, aplicación, infraestructura y presentación
 - **Autenticación JWT**: Tokens de acceso y refresh tokens
@@ -14,15 +14,15 @@ Este es el microservicio principal del sistema de gestión empresarial, desarrol
 - **Transacciones**: Soporte para operaciones atómicas
 - **Endpoint público**: Registro de clientes sin autenticación
 
-## 📋 Prerequisitos
+## Prerequisitos
 
 - Node.js (v18 o superior)
 - Docker y Docker Compose
 - Git
 
-## ⚙️ Instalación
+## Instalación
 
-### 🚀 Setup Automático (Recomendado)
+### Setup Automático (Recomendado)
 
 Para configurar todo el entorno de desarrollo automáticamente:
 
@@ -41,7 +41,7 @@ chmod +x setup-development.sh
 
 Este script instalará dependencias, configurará VS Code, iniciará la base de datos y verificará que todo funcione correctamente.
 
-### 📋 Setup Manual
+### Setup Manual
 
 Si prefieres configurar manualmente:
 
@@ -61,7 +61,7 @@ cp .env.example .env.development
 # Ver ENV_SETUP.md para instrucciones detalladas
 ```
 
-**⚠️ IMPORTANTE:** Los archivos `.env.development` y `.env.production` no están en el repositorio por seguridad. Debes crear tus propios archivos usando `.env.example` como plantilla.
+**IMPORTANTE:** Los archivos `.env.development` y `.env.production` no están en el repositorio por seguridad. Debes crear tus propios archivos usando `.env.example` como plantilla.
 
 ### 3. Configurar VS Code
 
@@ -86,13 +86,13 @@ docker-compose up -d
 npm run start:dev
 ```
 
-## � Documentación
+## Documentación
 
 - **API Documentation**: Disponible en `http://localhost:3000/api/docs` (Swagger)
 - **Arquitectura DDD**: El proyecto sigue principios de Domain-Driven Design
 - **Autenticación JWT**: Sistema de tokens para autenticación y autorización
 
-## 🔧 Archivos de Configuración
+## Archivos de Configuración
 
 - **`DEVELOPMENT_SETUP.md`**: Guía completa para configurar el entorno de desarrollo
 - **`ENV_SETUP.md`**: Instrucciones para configurar variables de entorno

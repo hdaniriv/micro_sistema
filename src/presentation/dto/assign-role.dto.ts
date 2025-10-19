@@ -1,6 +1,6 @@
-import { IsInt, IsPositive } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { IsInt, IsPositive } from 'class-validator';
 
 export class AssignRoleDto {
   @ApiProperty({
@@ -8,8 +8,8 @@ export class AssignRoleDto {
     example: 1,
   })
   @Type(() => Number)
-  @IsInt()
-  @IsPositive()
+  @IsInt({ message: 'El ID de usuario debe ser un número entero' })
+  @IsPositive({ message: 'El ID de usuario debe ser un número positivo' })
   idUsuario: number;
 
   @ApiProperty({
@@ -17,7 +17,7 @@ export class AssignRoleDto {
     example: 2,
   })
   @Type(() => Number)
-  @IsInt()
-  @IsPositive()
+  @IsInt({ message: 'El ID de rol debe ser un número entero' })
+  @IsPositive({ message: 'El ID de rol debe ser un número positivo' })
   idRol: number;
 }

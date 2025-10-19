@@ -13,6 +13,7 @@ import { IUsuarioRepository } from '../../domain/repositories/usuario.repository
 import {
   ChangePasswordDto,
   CreateUsuarioDto,
+  ResetPasswordDto,
   UpdateUsuarioDto,
   UsuarioResponseDto,
 } from '../../presentation/dto';
@@ -138,6 +139,19 @@ export class UsuarioService {
     if (!existingUser) {
       throw new NotFoundException('Usuario no encontrado');
     }
+    // Eliminar asociaciones de roles antes de borrar el usuario para evitar errores de FK
+    try {
+      const roles = await this.usuarioRolRepository.findByUserId(id);
+      for (const ur of roles) {
+        try {
+          await this.usuarioRolRepository.removeRole(id, ur.idRol);
+        } catch {
+          // Ignorar fallos individuales y continuar
+        }
+      }
+    } catch {
+      // Si falla la consulta de roles, continuamos con el intento de borrado; el repositorio devolverá el error si aplica
+    }
 
     const deleted = await this.usuarioRepository.delete(id);
     if (!deleted) {
@@ -220,6 +234,28 @@ export class UsuarioService {
     await this.usuarioRepository.update(userId, {
       password: hashedNewPassword,
     });
+  }
+
+  async resetPassword(
+    userId: number,
+    resetPasswordDto: ResetPasswordDto
+  ): Promise<void> {
+    const user = await this.usuarioRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const hashedNewPassword = await this.cryptoService.hashPassword(
+      resetPasswordDto.newPassword
+    );
+
+    const updated = await this.usuarioRepository.update(userId, {
+      password: hashedNewPassword,
+    });
+
+    if (!updated) {
+      throw new BadRequestException('Error al resetear la contraseña');
+    }
   }
 
   async findActiveUsers(): Promise<UsuarioResponseDto[]> {

@@ -1,7 +1,7 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './shared/exceptions/all-exceptions.filter';
 
@@ -16,6 +16,55 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
+      stopAtFirstError: false,
+      exceptionFactory: errors => {
+        const messages: string[] = [];
+        const walk = (errs: any[], parent?: string) => {
+          for (const err of errs) {
+            const field = parent ? `${parent}.${err.property}` : err.property;
+            if (err?.constraints) {
+              for (const key of Object.keys(err.constraints)) {
+                let msg = err.constraints[key] as string;
+                // Mapear mensajes genéricos al español si vinieran en inglés
+                switch (key) {
+                  case 'whitelistValidation':
+                    msg = `La propiedad ${field} no está permitida`;
+                    break;
+                  case 'isString':
+                    msg = `El campo ${field} debe ser una cadena de texto`;
+                    break;
+                  case 'isEmail':
+                    msg = `El campo ${field} debe ser un correo electrónico válido`;
+                    break;
+                  case 'minLength':
+                    msg = `El campo ${field} no cumple con la longitud mínima`;
+                    break;
+                  case 'maxLength':
+                    msg = `El campo ${field} excede la longitud máxima permitida`;
+                    break;
+                  case 'isBoolean':
+                    msg = `El campo ${field} debe ser verdadero o falso`;
+                    break;
+                  case 'isInt':
+                    msg = `El campo ${field} debe ser un número entero`;
+                    break;
+                  case 'isPositive':
+                    msg = `El campo ${field} debe ser un número positivo`;
+                    break;
+                }
+                messages.push(msg);
+              }
+            }
+            if (err?.children?.length) {
+              walk(err.children, field);
+            }
+          }
+        };
+        walk(errors as any[]);
+        return new BadRequestException(
+          messages.length ? messages : 'Datos inválidos'
+        );
+      },
     })
   );
 
