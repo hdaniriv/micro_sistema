@@ -92,6 +92,61 @@ export class EmpleadoGestionController {
     }
   }
 
+  // Empleados filtrados por supervisor
+  @Get('supervisor/:idSupervisor')
+  @ApiOperation({ summary: 'Listar empleados filtrados por supervisor' })
+  @ApiOkResponse({ description: 'Listado de empleados del supervisor' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Supervisor', 'Soporte')
+  async findBySupervisor(
+    @Param('idSupervisor', ParseIntPipe) idSupervisor: number
+  ) {
+    const pattern = { cmd: 'empleados.findBySupervisor.v1' };
+    try {
+      const obs$ = this.withTimeout(
+        this.gestionClient.send(pattern, { idSupervisor })
+      );
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(err, 'EmpleadoGestionController.findBySupervisor');
+    }
+  }
+
+  // Técnicos asignados al supervisor actual
+  @Get('mis-tecnicos')
+  @ApiOperation({ summary: 'Listar técnicos asignados a mi supervisión' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Supervisor')
+  async misTecnicos(@Request() req: any) {
+    try {
+      const empleados: any[] = await firstValueFrom(
+        this.withTimeout(
+          this.gestionClient.send({ cmd: 'empleados.findAll.v1' }, {})
+        )
+      );
+      const relaciones: any[] = await firstValueFrom(
+        this.withTimeout(
+          this.gestionClient.send(
+            { cmd: 'supervisoresTecnicos.findAll.v1' },
+            {}
+          )
+        )
+      );
+      // idUsuario del supervisor -> encontrar su Empleado.id
+      const supEmpleado = empleados.find(e => e.idUsuario === req.user?.sub);
+      const idSupervisor = supEmpleado?.id;
+      if (!idSupervisor) return [];
+      const idsTecnicos = new Set(
+        relaciones
+          .filter(r => r.idSupervisor === idSupervisor)
+          .map(r => r.idTecnico)
+      );
+      return empleados.filter(e => idsTecnicos.has(e.id));
+    } catch (err: any) {
+      this.handleError(err, 'EmpleadoGestionController.misTecnicos');
+    }
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener empleado por ID' })
   @ApiOkResponse({ description: 'Empleado' })

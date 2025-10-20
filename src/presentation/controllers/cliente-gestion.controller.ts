@@ -18,6 +18,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, In } from 'typeorm';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -30,6 +32,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { GESTION_MS } from '../../application/microservices.module';
 import { CustomLoggerService } from '../../shared/utils/logger.service';
 import { JwtAuthGuard, Roles, RolesGuard } from '../guards';
+import { UsuarioEntity } from '../../infrastructure/database/entities/usuario.entity';
 
 interface CreateClienteDto {
   nombre: string;
@@ -46,7 +49,9 @@ export class ClienteGestionController {
   constructor(
     @Inject(GESTION_MS) private readonly gestionClient: ClientProxy,
     private readonly logger: CustomLoggerService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    @InjectRepository(UsuarioEntity)
+    private readonly usuarioRepo: Repository<UsuarioEntity>
   ) {}
 
   private withTimeout<T>(obs: any) {
@@ -77,6 +82,72 @@ export class ClienteGestionController {
     throw new ServiceUnavailableException('Gestión no disponible');
   }
 
+  // Endpoints para que un usuario con rol Cliente gestione su propio registro
+  @Get('self')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Cliente')
+  @ApiOperation({ summary: 'Obtener cliente asociado al usuario actual' })
+  async getSelf(@Request() req: any) {
+    const pattern = { cmd: 'clientes.findByUsuario.v1' };
+    const idUsuario = req.user?.sub;
+    try {
+      const obs$ = this.withTimeout(
+        this.gestionClient.send(pattern, { idUsuario })
+      );
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(err, 'ClienteGestionController.getSelf');
+    }
+  }
+
+  @Post('self')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Cliente')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Crear cliente asociado al usuario actual' })
+  @ApiBody({ description: 'Datos del cliente propio' })
+  async createSelf(@Body() dto: any, @Request() req: any) {
+    const pattern = { cmd: 'clientes.create.v1' };
+    const payload = {
+      dto: { ...dto, idUsuario: req.user?.sub },
+      userContext: this.userContextFrom(req),
+    };
+    try {
+      const obs$ = this.withTimeout(this.gestionClient.send(pattern, payload));
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(err, 'ClienteGestionController.createSelf');
+    }
+  }
+
+  @Patch('self')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Cliente')
+  @ApiOperation({ summary: 'Actualizar cliente propio' })
+  async updateSelf(@Body() dto: any, @Request() req: any) {
+    // Resolver el cliente propio y luego actualizar
+    const findPattern = { cmd: 'clientes.findByUsuario.v1' };
+    const updatePattern = { cmd: 'clientes.update.v1' };
+    const idUsuario = req.user?.sub;
+    try {
+      const existing: any = await firstValueFrom(
+        this.withTimeout(this.gestionClient.send(findPattern, { idUsuario }))
+      );
+      if (!existing?.id) {
+        throw new NotFoundException('Cliente propio no encontrado');
+      }
+      const obs$ = this.withTimeout(
+        this.gestionClient.send(updatePattern, { id: existing.id, dto })
+      );
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(err, 'ClienteGestionController.updateSelf');
+    }
+  }
+
   @Get()
   @ApiOperation({ summary: 'Listar clientes (proxy a MS Gestión)' })
   @ApiOkResponse({
@@ -105,7 +176,25 @@ export class ClienteGestionController {
     const pattern = { cmd: 'clientes.findAll.v1' };
     try {
       const obs$ = this.withTimeout(this.gestionClient.send(pattern, {}));
-      return await firstValueFrom(obs$);
+      const clientes: any[] = await firstValueFrom(obs$);
+      // Enriquecer con username a partir de idUsuario (no confundir con idUsuarioCreador)
+      const ids = Array.from(
+        new Set(
+          (clientes || [])
+            .map((c) => c?.idUsuario)
+            .filter((v) => typeof v === 'number') as number[]
+        )
+      );
+      let users: UsuarioEntity[] = [];
+      if (ids.length > 0) {
+        users = await this.usuarioRepo.find({ where: { id: In(ids) } });
+      }
+      const map = new Map<number, string>();
+      for (const u of users) map.set(u.id, u.username || u.nombre || String(u.id));
+      return (clientes || []).map((c) => ({
+        ...c,
+        usuarioUsername: c?.idUsuario ? map.get(c.idUsuario) || null : null,
+      }));
     } catch (err: any) {
       this.handleError(err, 'ClienteGestionController.findAll');
     }
@@ -137,7 +226,13 @@ export class ClienteGestionController {
     const pattern = { cmd: 'clientes.findById.v1' };
     try {
       const obs$ = this.withTimeout(this.gestionClient.send(pattern, { id }));
-      return await firstValueFrom(obs$);
+      const c: any = await firstValueFrom(obs$);
+      if (!c) return c;
+      if (typeof c.idUsuario === 'number' && c.idUsuario) {
+        const u = await this.usuarioRepo.findOne({ where: { id: c.idUsuario } });
+        return { ...c, usuarioUsername: u?.username || u?.nombre || null };
+      }
+      return { ...c, usuarioUsername: null };
     } catch (err: any) {
       this.handleError(err, 'ClienteGestionController.findById');
     }

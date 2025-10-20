@@ -89,6 +89,27 @@ export class SupervisorTecnicoGestionController {
     }
   }
 
+  @Get('supervisor/:idSupervisor')
+  @ApiOperation({ summary: 'Listar técnicos asignados a un supervisor' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Supervisor')
+  async findBySupervisor(
+    @Param('idSupervisor', ParseIntPipe) idSupervisor: number
+  ) {
+    const pattern = { cmd: 'supervisoresTecnicos.findBySupervisor.v1' };
+    try {
+      const obs$ = this.withTimeout(
+        this.gestionClient.send(pattern, { idSupervisor })
+      );
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(
+        err,
+        'SupervisorTecnicoGestionController.findBySupervisor'
+      );
+    }
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener relación por ID' })
   @ApiOkResponse({ description: 'Relación' })
@@ -163,6 +184,28 @@ export class SupervisorTecnicoGestionController {
       return await firstValueFrom(obs$);
     } catch (err: any) {
       this.handleError(err, 'SupervisorTecnicoGestionController.remove');
+    }
+  }
+
+  @Delete('supervisor/:idSupervisor')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Supervisor')
+  @ApiOperation({ summary: 'Eliminar todas las asignaciones de un supervisor' })
+  async removeBySupervisor(
+    @Param('idSupervisor', ParseIntPipe) idSupervisor: number
+  ) {
+    const pattern = { cmd: 'supervisoresTecnicos.deleteBySupervisor.v1' };
+    try {
+      const obs$ = this.withTimeout(
+        this.gestionClient.send(pattern, { idSupervisor })
+      );
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(
+        err,
+        'SupervisorTecnicoGestionController.removeBySupervisor'
+      );
     }
   }
 }

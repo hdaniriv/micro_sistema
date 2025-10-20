@@ -77,7 +77,7 @@ export class TipoGestionGestionController {
   @ApiOperation({ summary: 'Listar tipos de gestión' })
   @ApiOkResponse({ description: 'Listado de tipos de gestión' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor', 'Soporte')
+  @Roles('Administrador', 'Supervisor', 'Soporte', 'Cliente', 'Técnico')
   async findAll() {
     const pattern = { cmd: 'tipoGestiones.findAll.v1' };
     try {
@@ -92,7 +92,7 @@ export class TipoGestionGestionController {
   @ApiOperation({ summary: 'Obtener tipo de gestión por ID' })
   @ApiOkResponse({ description: 'Tipo de gestión' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor', 'Soporte')
+  @Roles('Administrador', 'Supervisor', 'Soporte', 'Cliente', 'Técnico')
   async findById(@Param('id', ParseIntPipe) id: number) {
     const pattern = { cmd: 'tipoGestiones.findById.v1' };
     try {

@@ -86,10 +86,13 @@ export class GestionGestionController {
   @ApiOperation({ summary: 'Listar gestiones' })
   @ApiOkResponse({ description: 'Listado de gestiones' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor', 'Soporte')
+  @Roles('Administrador', 'Supervisor', 'Soporte', 'Técnico', 'Cliente')
   async findAll() {
     const pattern = { cmd: 'gestiones.findAll.v1' };
     try {
+      // Nota: hoy no filtramos por usuario/rol. En una siguiente iteración
+      // podríamos enviar userContext y que el MS filtre por idCliente (rol Cliente)
+      // o por técnico asignado (rol Técnico).
       const obs$ = this.withTimeout(this.gestionClient.send(pattern, {}));
       return await firstValueFrom(obs$);
     } catch (err: any) {
@@ -97,11 +100,92 @@ export class GestionGestionController {
     }
   }
 
+  // Nuevos endpoints de filtrado/consulta avanzada
+  @Get('search')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Supervisor', 'Técnico', 'Cliente')
+  @ApiOperation({
+    summary: 'Buscar gestiones con filtros',
+    description:
+      'Permite filtrar por asignación (sin-tecnico|con-tecnico), estado (finalizadas|no-finalizadas), rango de fechas (desde|hasta). Aplica reglas por rol: Admin ve todo; Supervisor ve sin técnico y de sus técnicos; Técnico ve las propias; Cliente ve las suyas.',
+  })
+  @ApiOkResponse({ description: 'Listado de gestiones filtrado' })
+  async search(@Request() req: any) {
+    const { query } = req;
+    const pickOne = (v: any) => (Array.isArray(v) ? v[0] : v);
+    const normalizeDate = (v: any): string | undefined => {
+      const s = (v ?? '').toString().trim();
+      if (!s) return undefined;
+      const low = s.toLowerCase();
+      if (low === 'null' || low === 'undefined' || low === 'invalid date')
+        return undefined;
+      // Acepta YYYY-MM-DD o ISO 8601 extendido
+      const isoLike =
+        /^(\d{4}-\d{2}-\d{2})(?:[ tT]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+      if (!isoLike.test(s)) return undefined;
+      // Si viene sólo fecha, retornamos tal cual; si viene con hora/offset, también es válido
+      return s;
+    };
+    const asignacion = pickOne(query?.asignacion);
+    const estadoFinalizacion = pickOne(query?.estadoFinalizacion);
+    const desde = normalizeDate(pickOne(query?.desde));
+    const hasta = normalizeDate(pickOne(query?.hasta));
+    const idTipoGestionRaw = pickOne(query?.idTipoGestion);
+    const estado = pickOne(query?.estado);
+    const idClienteRaw = pickOne(query?.idCliente);
+    const idTecnicoRaw = pickOne(query?.idTecnico);
+    const q: any = {
+      asignacion: asignacion || undefined,
+      estadoFinalizacion: estadoFinalizacion || undefined,
+      desde: desde || undefined,
+      hasta: hasta || undefined,
+      idTipoGestion: idTipoGestionRaw ? Number(idTipoGestionRaw) : undefined,
+      estado: estado || undefined,
+    };
+    // Pasar hints para el MS: idCliente/idTecnico según rol
+    const roles: string[] = req.user?.roles || [];
+    if (roles.includes('Técnico') || roles.includes('Tecnico')) {
+      // Esperamos idTecnico por query o mapeo futuro por usuario
+      if (idTecnicoRaw) q.idTecnico = Number(idTecnicoRaw);
+    }
+    if (roles.includes('Cliente')) {
+      if (idClienteRaw) q.idCliente = Number(idClienteRaw);
+    }
+
+    const pattern = { cmd: 'gestiones.search.v1' };
+    const payload = { query: q, userContext: this.userContextFrom(req) };
+    try {
+      const obs$ = this.withTimeout(this.gestionClient.send(pattern, payload));
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(err, 'GestionGestionController.search');
+    }
+  }
+
+  @Get('sin-tecnico')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Supervisor')
+  @ApiOperation({ summary: 'Listar gestiones sin técnico asignado' })
+  async sinTecnico(@Request() req: any) {
+    const pattern = { cmd: 'gestiones.sinTecnico.v1' };
+    const q = { desde: req.query?.desde, hasta: req.query?.hasta };
+    try {
+      const obs$ = this.withTimeout(
+        this.gestionClient.send(pattern, { query: q })
+      );
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(err, 'GestionGestionController.sinTecnico');
+    }
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener gestión por ID' })
   @ApiOkResponse({ description: 'Gestión' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor', 'Soporte')
+  @Roles('Administrador', 'Supervisor', 'Soporte', 'Técnico', 'Cliente')
   async findById(@Param('id', ParseIntPipe) id: number) {
     const pattern = { cmd: 'gestiones.findById.v1' };
     try {
@@ -115,7 +199,7 @@ export class GestionGestionController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor')
+  @Roles('Administrador', 'Supervisor', 'Cliente')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Crear gestión' })
   @ApiBody({
@@ -138,9 +222,35 @@ export class GestionGestionController {
   })
   async create(@Body() dto: CreateGestionDto, @Request() req: any) {
     const pattern = { cmd: 'gestiones.create.v1' };
-    const payload = { dto, userContext: this.userContextFrom(req) };
+    const userContext = this.userContextFrom(req);
+    const roles: string[] = req.user?.roles || [];
+    const isCliente = roles.includes('Cliente');
     try {
-      const obs$ = this.withTimeout(this.gestionClient.send(pattern, payload));
+      let payloadDto = { ...dto } as any;
+      if (isCliente) {
+        // Resolver cliente asociado al usuario actual y forzar idCliente
+        const findClientePattern = { cmd: 'clientes.findByUsuario.v1' };
+        const selfCliente: any = await firstValueFrom(
+          this.withTimeout(
+            this.gestionClient.send(findClientePattern, {
+              idUsuario: req.user?.sub,
+            })
+          )
+        );
+        if (!selfCliente?.id) {
+          return {
+            statusCode: 400,
+            message:
+              'Debes completar tus datos de cliente antes de crear una gestión',
+          };
+        }
+        payloadDto.idCliente = selfCliente.id;
+        // Un cliente no debería asignar técnico directamente
+        payloadDto.idTecnico = undefined;
+      }
+      const obs$ = this.withTimeout(
+        this.gestionClient.send(pattern, { dto: payloadDto, userContext })
+      );
       return await firstValueFrom(obs$);
     } catch (err: any) {
       this.handleError(err, 'GestionGestionController.create');
@@ -154,16 +264,51 @@ export class GestionGestionController {
   @ApiOperation({ summary: 'Actualizar gestión' })
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateGestionDto
+    @Body() dto: UpdateGestionDto,
+    @Request() req: any
   ) {
     const pattern = { cmd: 'gestiones.update.v1' };
     try {
       const obs$ = this.withTimeout(
-        this.gestionClient.send(pattern, { id, dto })
+        this.gestionClient.send(pattern, {
+          id,
+          dto,
+          userContext: this.userContextFrom(req),
+        })
       );
       return await firstValueFrom(obs$);
     } catch (err: any) {
       this.handleError(err, 'GestionGestionController.update');
+    }
+  }
+
+  @Patch(':id/asignacion')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador', 'Supervisor', 'Técnico')
+  @ApiOperation({ summary: 'Asignar técnico y fechas (inicio/fin)' })
+  async asignacion(
+    @Param('id', ParseIntPipe) id: number,
+    @Body()
+    dto: {
+      idTecnico?: number;
+      fechaInicio?: string;
+      fechaFin?: string;
+    },
+    @Request() req: any
+  ) {
+    const pattern = { cmd: 'gestiones.update.v1' };
+    try {
+      const obs$ = this.withTimeout(
+        this.gestionClient.send(pattern, {
+          id,
+          dto,
+          userContext: this.userContextFrom(req),
+        })
+      );
+      return await firstValueFrom(obs$);
+    } catch (err: any) {
+      this.handleError(err, 'GestionGestionController.asignacion');
     }
   }
 
