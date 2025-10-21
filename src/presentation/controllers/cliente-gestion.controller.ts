@@ -18,8 +18,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -28,11 +26,13 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { InjectRepository } from '@nestjs/typeorm';
 import { firstValueFrom, timeout } from 'rxjs';
+import { In, Repository } from 'typeorm';
 import { GESTION_MS } from '../../application/microservices.module';
+import { UsuarioEntity } from '../../infrastructure/database/entities/usuario.entity';
 import { CustomLoggerService } from '../../shared/utils/logger.service';
 import { JwtAuthGuard, Roles, RolesGuard } from '../guards';
-import { UsuarioEntity } from '../../infrastructure/database/entities/usuario.entity';
 
 interface CreateClienteDto {
   nombre: string;
@@ -181,8 +181,8 @@ export class ClienteGestionController {
       const ids = Array.from(
         new Set(
           (clientes || [])
-            .map((c) => c?.idUsuario)
-            .filter((v) => typeof v === 'number') as number[]
+            .map(c => c?.idUsuario)
+            .filter(v => typeof v === 'number') as number[]
         )
       );
       let users: UsuarioEntity[] = [];
@@ -190,8 +190,9 @@ export class ClienteGestionController {
         users = await this.usuarioRepo.find({ where: { id: In(ids) } });
       }
       const map = new Map<number, string>();
-      for (const u of users) map.set(u.id, u.username || u.nombre || String(u.id));
-      return (clientes || []).map((c) => ({
+      for (const u of users)
+        map.set(u.id, u.username || u.nombre || String(u.id));
+      return (clientes || []).map(c => ({
         ...c,
         usuarioUsername: c?.idUsuario ? map.get(c.idUsuario) || null : null,
       }));
@@ -229,7 +230,9 @@ export class ClienteGestionController {
       const c: any = await firstValueFrom(obs$);
       if (!c) return c;
       if (typeof c.idUsuario === 'number' && c.idUsuario) {
-        const u = await this.usuarioRepo.findOne({ where: { id: c.idUsuario } });
+        const u = await this.usuarioRepo.findOne({
+          where: { id: c.idUsuario },
+        });
         return { ...c, usuarioUsername: u?.username || u?.nombre || null };
       }
       return { ...c, usuarioUsername: null };
