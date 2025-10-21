@@ -46,6 +46,39 @@ interface CreateGestionDto {
 
 interface UpdateGestionDto extends Partial<CreateGestionDto> {}
 
+// Esquema Swagger para la respuesta de Gestiones (incluye codigo y tecnicoNombre)
+const GESTION_RESPONSE_SCHEMA: any = {
+  type: 'object',
+  properties: {
+    id: { type: 'number' },
+    codigo: { type: 'string', minLength: 6, maxLength: 6, example: '250001' },
+    idCliente: { type: 'number' },
+    idTecnico: { type: 'number', nullable: true },
+    tecnicoNombre: { type: 'string', nullable: true },
+    idTipoGestion: { type: 'number' },
+    direccion: { type: 'string' },
+    latitud: { type: 'string', nullable: true },
+    longitud: { type: 'string', nullable: true },
+    fechaProgramada: { type: 'string', format: 'date-time' },
+    fechaInicio: { type: 'string', format: 'date-time', nullable: true },
+    fechaFin: { type: 'string', format: 'date-time', nullable: true },
+    observaciones: { type: 'string', nullable: true },
+    estado: { type: 'string' },
+    fechaCreacion: { type: 'string', format: 'date-time' },
+    fechaModificacion: { type: 'string', format: 'date-time' },
+    idUsuarioCreador: { type: 'number' },
+  },
+  required: [
+    'id',
+    'codigo',
+    'idCliente',
+    'idTipoGestion',
+    'direccion',
+    'fechaProgramada',
+    'estado',
+  ],
+};
+
 @ApiTags('Gestión')
 @Controller('gestion/gestiones')
 export class GestionGestionController {
@@ -151,7 +184,10 @@ export class GestionGestionController {
 
   @Get()
   @ApiOperation({ summary: 'Listar gestiones' })
-  @ApiOkResponse({ description: 'Listado de gestiones' })
+  @ApiOkResponse({
+    description: 'Listado de gestiones',
+    schema: { type: 'array', items: GESTION_RESPONSE_SCHEMA },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Supervisor', 'Soporte', 'Tecnico', 'Cliente')
   async findAll() {
@@ -178,7 +214,10 @@ export class GestionGestionController {
     description:
       'Permite filtrar por asignación (sin-tecnico|con-tecnico), estado (finalizadas|no-finalizadas), rango de fechas (desde|hasta). Aplica reglas por rol: Admin ve todo; Supervisor ve sin tecnico y de sus tecnicos; Tecnico ve las propias; Cliente ve las suyas.',
   })
-  @ApiOkResponse({ description: 'Listado de gestiones filtrado' })
+  @ApiOkResponse({
+    description: 'Listado de gestiones filtrado',
+    schema: { type: 'array', items: GESTION_RESPONSE_SCHEMA },
+  })
   async search(@Request() req: any) {
     const { query } = req;
     const pickOne = (v: any) => (Array.isArray(v) ? v[0] : v);
@@ -257,7 +296,7 @@ export class GestionGestionController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener gestión por ID' })
-  @ApiOkResponse({ description: 'Gestión' })
+  @ApiOkResponse({ description: 'Gestión', schema: GESTION_RESPONSE_SCHEMA })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Supervisor', 'Soporte', 'Tecnico', 'Cliente')
   async findById(@Param('id', ParseIntPipe) id: number) {
@@ -294,6 +333,10 @@ export class GestionGestionController {
       },
       required: ['idCliente', 'idTipoGestion', 'direccion'],
     },
+  })
+  @ApiOkResponse({
+    description: 'Gestión creada',
+    schema: GESTION_RESPONSE_SCHEMA,
   })
   async create(@Body() dto: CreateGestionDto, @Request() req: any) {
     const pattern = { cmd: 'gestiones.create.v1' };
@@ -338,6 +381,10 @@ export class GestionGestionController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Supervisor')
   @ApiOperation({ summary: 'Actualizar gestión' })
+  @ApiOkResponse({
+    description: 'Gestión actualizada',
+    schema: GESTION_RESPONSE_SCHEMA,
+  })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateGestionDto,
@@ -364,6 +411,10 @@ export class GestionGestionController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Supervisor', 'Tecnico')
   @ApiOperation({ summary: 'Asignar tecnico y fechas (inicio/fin)' })
+  @ApiOkResponse({
+    description: 'Gestión actualizada (asignación)',
+    schema: GESTION_RESPONSE_SCHEMA,
+  })
   async asignacion(
     @Param('id', ParseIntPipe) id: number,
     @Body()

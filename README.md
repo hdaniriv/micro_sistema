@@ -6,7 +6,7 @@ Este es el microservicio principal del sistema de gestión empresarial, desarrol
 
 - **Arquitectura DDD**: Separación clara entre dominio, aplicación, infraestructura y presentación
 - **Autenticación JWT**: Tokens de acceso y refresh tokens
-- **Autorización basada en roles**: Administrador, Supervisor, Técnico, Cliente
+- **Autorización basada en roles**: Administrador, Supervisor, Tecnico, Cliente
 - **Base de datos MySQL**: Con Docker y TypeORM
 - **Documentación Swagger**: API completamente documentada
 - **Encriptación segura**: bcrypt para contraseñas
@@ -91,6 +91,16 @@ npm run start:dev
 - **API Documentation**: Disponible en `http://localhost:3000/api/docs` (Swagger)
 - **Arquitectura DDD**: El proyecto sigue principios de Domain-Driven Design
 - **Autenticación JWT**: Sistema de tokens para autenticación y autorización
+
+## Notas de integración con Gestiones
+
+El gateway expone endpoints REST bajo `/api/gestion/gestiones` que proxyean al microservicio de Gestión.
+
+- Respuestas de gestiones incluyen, además de los campos tradicionales, el campo `codigo` (string, 6 caracteres, formato YYNNNN) y `tecnicoNombre` (cuando aplica, como campo enriquecido para visualización).
+- Reglas por rol:
+  - Tecnico: sólo ve sus gestiones; puede establecer fechaInicio/fechaFin; no reasigna técnicos.
+  - Cliente: sólo sus gestiones.
+  - Supervisor/Admin: visibilidad ampliada según reglas.
 
 ## Archivos de Configuración
 
