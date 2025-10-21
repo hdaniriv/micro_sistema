@@ -82,19 +82,87 @@ export class GestionGestionController {
     throw new ServiceUnavailableException('Gestión no disponible');
   }
 
+  // Resolver el id del empleado (tecnico) asociado al usuario autenticado
+  private async resolveEmpleadoIdByUsuario(
+    idUsuario?: number
+  ): Promise<number | undefined> {
+    if (!idUsuario) return undefined;
+    try {
+      const empleado: any = await firstValueFrom(
+        this.withTimeout(
+          this.gestionClient.send(
+            { cmd: 'empleados.findByUsuario.v1' },
+            { idUsuario }
+          )
+        )
+      );
+      return empleado?.id || undefined;
+    } catch (err) {
+      this.logger.logError(
+        err,
+        'No se pudo resolver Empleado por usuario',
+        'resolveEmpleadoIdByUsuario'
+      );
+      return undefined;
+    }
+  }
+
+  // Enriquecer respuesta con nombre del tecnico asignado (si aplica)
+  private async enrichTecnicoNombre<T = any>(data: any): Promise<any> {
+    try {
+      if (!data) return data;
+      const isArray = Array.isArray(data);
+      const items: any[] = isArray ? data : [data];
+      const ids = new Set<number>();
+      for (const g of items) {
+        const idTec = g?.idTecnico;
+        if (typeof idTec === 'number' && idTec > 0) ids.add(idTec);
+      }
+      if (ids.size === 0) return data;
+      // Obtener empleados desde el MS Gestión y mapear id -> nombre completo
+      const empleados: any[] = await firstValueFrom(
+        this.withTimeout(
+          this.gestionClient.send({ cmd: 'empleados.findAll.v1' }, {})
+        )
+      );
+      const map = new Map<number, string>();
+      for (const e of empleados || []) {
+        const full = `${(e?.nombres || '').toString().trim()} ${(
+          e?.apellidos || ''
+        )
+          .toString()
+          .trim()}`.trim();
+        if (e?.id) map.set(e.id, full);
+      }
+      for (const g of items) {
+        const idTec = g?.idTecnico;
+        if (typeof idTec === 'number' && idTec > 0) {
+          const nombre = map.get(idTec);
+          if (nombre) g.tecnicoNombre = nombre;
+        }
+      }
+      return data;
+    } catch (e) {
+      // Si falla el enriquecimiento, devolvemos los datos originales sin bloquear la respuesta
+      this.logger.warn?.('Fallo al enriquecer tecnicoNombre en gestiones');
+      return data;
+    }
+  }
+
   @Get()
   @ApiOperation({ summary: 'Listar gestiones' })
   @ApiOkResponse({ description: 'Listado de gestiones' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor', 'Soporte', 'Técnico', 'Cliente')
+  @Roles('Administrador', 'Supervisor', 'Soporte', 'Tecnico', 'Cliente')
   async findAll() {
     const pattern = { cmd: 'gestiones.findAll.v1' };
     try {
       // Nota: hoy no filtramos por usuario/rol. En una siguiente iteración
       // podríamos enviar userContext y que el MS filtre por idCliente (rol Cliente)
-      // o por técnico asignado (rol Técnico).
+      // o por tecnico asignado (rol Tecnico).
       const obs$ = this.withTimeout(this.gestionClient.send(pattern, {}));
-      return await firstValueFrom(obs$);
+      const base = await firstValueFrom(obs$);
+      return await this.enrichTecnicoNombre(base);
     } catch (err: any) {
       this.handleError(err, 'GestionGestionController.findAll');
     }
@@ -104,11 +172,11 @@ export class GestionGestionController {
   @Get('search')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor', 'Técnico', 'Cliente')
+  @Roles('Administrador', 'Supervisor', 'Tecnico', 'Cliente')
   @ApiOperation({
     summary: 'Buscar gestiones con filtros',
     description:
-      'Permite filtrar por asignación (sin-tecnico|con-tecnico), estado (finalizadas|no-finalizadas), rango de fechas (desde|hasta). Aplica reglas por rol: Admin ve todo; Supervisor ve sin técnico y de sus técnicos; Técnico ve las propias; Cliente ve las suyas.',
+      'Permite filtrar por asignación (sin-tecnico|con-tecnico), estado (finalizadas|no-finalizadas), rango de fechas (desde|hasta). Aplica reglas por rol: Admin ve todo; Supervisor ve sin tecnico y de sus tecnicos; Tecnico ve las propias; Cliente ve las suyas.',
   })
   @ApiOkResponse({ description: 'Listado de gestiones filtrado' })
   async search(@Request() req: any) {
@@ -145,9 +213,14 @@ export class GestionGestionController {
     };
     // Pasar hints para el MS: idCliente/idTecnico según rol
     const roles: string[] = req.user?.roles || [];
-    if (roles.includes('Técnico') || roles.includes('Tecnico')) {
-      // Esperamos idTecnico por query o mapeo futuro por usuario
-      if (idTecnicoRaw) q.idTecnico = Number(idTecnicoRaw);
+    if (roles.includes('Tecnico')) {
+      // Forzar filtro por el tecnico autenticado (ignorar query externa)
+      const selfTecId = await this.resolveEmpleadoIdByUsuario(req.user?.sub);
+      if (!selfTecId) {
+        // Si el usuario no está asociado a un empleado, no debe ver gestiones
+        return [];
+      }
+      q.idTecnico = selfTecId;
     }
     if (roles.includes('Cliente')) {
       if (idClienteRaw) q.idCliente = Number(idClienteRaw);
@@ -157,7 +230,8 @@ export class GestionGestionController {
     const payload = { query: q, userContext: this.userContextFrom(req) };
     try {
       const obs$ = this.withTimeout(this.gestionClient.send(pattern, payload));
-      return await firstValueFrom(obs$);
+      const base = await firstValueFrom(obs$);
+      return await this.enrichTecnicoNombre(base);
     } catch (err: any) {
       this.handleError(err, 'GestionGestionController.search');
     }
@@ -167,7 +241,7 @@ export class GestionGestionController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador', 'Supervisor')
-  @ApiOperation({ summary: 'Listar gestiones sin técnico asignado' })
+  @ApiOperation({ summary: 'Listar gestiones sin tecnico asignado' })
   async sinTecnico(@Request() req: any) {
     const pattern = { cmd: 'gestiones.sinTecnico.v1' };
     const q = { desde: req.query?.desde, hasta: req.query?.hasta };
@@ -185,12 +259,13 @@ export class GestionGestionController {
   @ApiOperation({ summary: 'Obtener gestión por ID' })
   @ApiOkResponse({ description: 'Gestión' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor', 'Soporte', 'Técnico', 'Cliente')
+  @Roles('Administrador', 'Supervisor', 'Soporte', 'Tecnico', 'Cliente')
   async findById(@Param('id', ParseIntPipe) id: number) {
     const pattern = { cmd: 'gestiones.findById.v1' };
     try {
       const obs$ = this.withTimeout(this.gestionClient.send(pattern, { id }));
-      return await firstValueFrom(obs$);
+      const base = await firstValueFrom(obs$);
+      return await this.enrichTecnicoNombre(base);
     } catch (err: any) {
       this.handleError(err, 'GestionGestionController.findById');
     }
@@ -245,13 +320,14 @@ export class GestionGestionController {
           };
         }
         payloadDto.idCliente = selfCliente.id;
-        // Un cliente no debería asignar técnico directamente
+        // Un cliente no debería asignar tecnico directamente
         payloadDto.idTecnico = undefined;
       }
       const obs$ = this.withTimeout(
         this.gestionClient.send(pattern, { dto: payloadDto, userContext })
       );
-      return await firstValueFrom(obs$);
+      const base = await firstValueFrom(obs$);
+      return await this.enrichTecnicoNombre(base);
     } catch (err: any) {
       this.handleError(err, 'GestionGestionController.create');
     }
@@ -276,7 +352,8 @@ export class GestionGestionController {
           userContext: this.userContextFrom(req),
         })
       );
-      return await firstValueFrom(obs$);
+      const base = await firstValueFrom(obs$);
+      return await this.enrichTecnicoNombre(base);
     } catch (err: any) {
       this.handleError(err, 'GestionGestionController.update');
     }
@@ -285,8 +362,8 @@ export class GestionGestionController {
   @Patch(':id/asignacion')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador', 'Supervisor', 'Técnico')
-  @ApiOperation({ summary: 'Asignar técnico y fechas (inicio/fin)' })
+  @Roles('Administrador', 'Supervisor', 'Tecnico')
+  @ApiOperation({ summary: 'Asignar tecnico y fechas (inicio/fin)' })
   async asignacion(
     @Param('id', ParseIntPipe) id: number,
     @Body()
@@ -299,6 +376,14 @@ export class GestionGestionController {
   ) {
     const pattern = { cmd: 'gestiones.update.v1' };
     try {
+      // Un tecnico no puede reasignar tecnico; sólo puede poner fechas
+      const roles: string[] = req.user?.roles || [];
+      if (roles.includes('Tecnico')) {
+        dto = {
+          fechaInicio: dto?.fechaInicio,
+          fechaFin: dto?.fechaFin,
+        };
+      }
       const obs$ = this.withTimeout(
         this.gestionClient.send(pattern, {
           id,
@@ -306,7 +391,8 @@ export class GestionGestionController {
           userContext: this.userContextFrom(req),
         })
       );
-      return await firstValueFrom(obs$);
+      const base = await firstValueFrom(obs$);
+      return await this.enrichTecnicoNombre(base);
     } catch (err: any) {
       this.handleError(err, 'GestionGestionController.asignacion');
     }
