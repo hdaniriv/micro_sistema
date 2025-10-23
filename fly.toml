@@ -1,0 +1,21 @@
+# fly.toml para API Sistema (HTTP)
+app = "sistema-api"
+primary_region = "mia"
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[env]
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 50
+    soft_limit = 25

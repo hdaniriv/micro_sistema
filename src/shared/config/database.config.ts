@@ -36,6 +36,11 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
       logging: ['error'],
       timezone: 'Z',
       charset: 'utf8mb4',
+      // SSL para proveedores como PlanetScale; activar con DB_SSL=true
+      ssl:
+        this.configService.get<string>('DB_SSL', 'false') === 'true'
+          ? { rejectUnauthorized: true }
+          : undefined,
       extra: {
         connectionLimit: 10,
       },
