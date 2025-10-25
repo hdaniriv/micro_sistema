@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { UsuarioEntity } from './usuario.entity';
 
@@ -22,11 +22,16 @@ export class SesionEntity extends BaseEntity {
   @Column({ length: 255, nullable: true })
   userAgent?: string;
 
-  @ManyToOne(() => UsuarioEntity, usuario => usuario.sesiones)
+  @ManyToOne(() => UsuarioEntity, usuario => usuario.sesiones, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'idUsuario' })
   usuario: UsuarioEntity;
 
-  @ManyToOne(() => UsuarioEntity, { nullable: true })
+  @ManyToOne(() => UsuarioEntity, {
+    nullable: true,
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'idUsuarioCreador' })
   usuarioCreador?: UsuarioEntity;
 }

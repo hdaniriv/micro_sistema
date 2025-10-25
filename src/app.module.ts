@@ -4,6 +4,7 @@ import { AuthService } from './application/auth/auth.service';
 import { MicroservicesModule } from './application/microservices.module';
 import { RolService } from './application/roles/rol.service';
 import { SecurityModule } from './application/security.module';
+import { SeedService } from './application/seed.service';
 import { StartupCheckService } from './application/startup-check.service';
 import { UsuarioService } from './application/users/usuario.service';
 import { PersistenceModule } from './infrastructure/persistence.module';
@@ -47,6 +48,12 @@ import { LoggerModule } from './shared/utils/logger.module';
     TipoGestionGestionController,
     GestionGestionController,
   ],
-  providers: [AuthService, UsuarioService, RolService, StartupCheckService],
+  providers: [
+    AuthService,
+    UsuarioService,
+    RolService,
+    StartupCheckService,
+    SeedService,
+  ],
 })
 export class AppModule {}

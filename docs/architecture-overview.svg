@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitectura - Sistema, Gestión y Aplicación</title>
+  <desc id="desc">Diagrama de alto nivel mostrando la SPA Angular (Aplicación) consumiendo el API (Sistema) por HTTPS, el Sistema comunicándose con Gestión por TCP, y cada servicio conectado a su base de datos.</desc>
+  <defs>
+    <style>
+      .box { fill:#ffffff; stroke:#2c3e50; stroke-width:2; rx:12; ry:12; }
+      .title { font: 700 16px 'Segoe UI', Arial, sans-serif; fill:#2c3e50; }
+      .small { font: 400 13px 'Segoe UI', Arial, sans-serif; fill:#34495e; }
+      .caption { font: 400 12px 'Segoe UI', Arial, sans-serif; fill:#7f8c8d; }
+      .cloud { fill:#f2f6ff; stroke:#4c6ef5; stroke-dasharray:4 3; }
+      .db { fill:#fcfcfc; stroke:#8e44ad; }
+      .arrow { stroke:#34495e; stroke-width:2.2; fill:none; }
+      .arrow-accent { stroke:#4c6ef5; stroke-width:2.2; fill:none; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34495e" />
+    </marker>
+    <marker id="arrowhead-accent" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4c6ef5" />
+    </marker>
+  </defs>
+
+  <!-- Fly.io Cloud -->
+  <rect x="30" y="20" width="940" height="560" class="cloud" />
+  <text x="40" y="42" class="caption">Fly.io (Producción)</text>
+
+  <!-- Aplicación (SPA) -->
+  <rect x="70" y="120" width="260" height="120" class="box" />
+  <text x="200" y="150" text-anchor="middle" class="title">Aplicación</text>
+  <text x="200" y="172" text-anchor="middle" class="small">Angular SPA</text>
+  <text x="200" y="194" text-anchor="middle" class="caption">https://sistema-frontend.fly.dev</text>
+
+  <!-- Sistema (API) -->
+  <rect x="370" y="100" width="260" height="160" class="box" />
+  <text x="500" y="130" text-anchor="middle" class="title">Sistema (API)</text>
+  <text x="500" y="152" text-anchor="middle" class="small">NestJS HTTP + Swagger</text>
+  <text x="500" y="174" text-anchor="middle" class="small">CORS, JWT (access/refresh)</text>
+  <text x="500" y="196" text-anchor="middle" class="caption">https://sistema-api.fly.dev/api</text>
+
+  <!-- Gestión (Microservicio) -->
+  <rect x="670" y="120" width="260" height="120" class="box" />
+  <text x="800" y="150" text-anchor="middle" class="title">Gestión (MS)</text>
+  <text x="800" y="172" text-anchor="middle" class="small">NestJS Microservicio</text>
+  <text x="800" y="194" text-anchor="middle" class="caption">TCP interno :4010</text>
+
+  <!-- Bases de datos -->
+  <rect x="390" y="360" width="220" height="110" class="db" rx="12" ry="12" />
+  <text x="500" y="388" text-anchor="middle" class="title">Aiven MySQL</text>
+  <text x="500" y="410" text-anchor="middle" class="small">Sistema (TypeORM)</text>
+  <text x="500" y="432" text-anchor="middle" class="caption">TLS con CA (MYSQL_CA_B64)</text>
+
+  <rect x="690" y="360" width="220" height="110" class="db" rx="12" ry="12" />
+  <text x="800" y="388" text-anchor="middle" class="title">Aiven Postgres</text>
+  <text x="800" y="410" text-anchor="middle" class="small">Gestión (TypeORM)</text>
+  <text x="800" y="432" text-anchor="middle" class="caption">SSL requerido</text>
+
+  <!-- Conexiones -->
+  <!-- SPA -> Sistema (HTTPS) -->
+  <line x1="330" y1="180" x2="370" y2="180" class="arrow-accent" marker-end="url(#arrowhead-accent)" />
+  <text x="350" y="170" class="caption">HTTPS (CORS OK)</text>
+
+  <!-- Sistema <-> Gestión (TCP) -->
+  <line x1="630" y1="180" x2="670" y2="180" class="arrow" marker-end="url(#arrowhead)" />
+  <line x1="670" y1="200" x2="630" y2="200" class="arrow" marker-end="url(#arrowhead)" />
+  <text x="650" y="220" class="caption" text-anchor="middle">RPC TCP 4010</text>
+
+  <!-- Sistema -> MySQL -->
+  <line x1="500" y1="260" x2="500" y2="360" class="arrow" marker-end="url(#arrowhead)" />
+  <text x="505" y="320" class="caption" transform="rotate(-90 505 320)">TLS</text>
+
+  <!-- Gestión -> Postgres -->
+  <line x1="800" y1="240" x2="800" y2="360" class="arrow" marker-end="url(#arrowhead)" />
+
+  <!-- Leyenda -->
+  <rect x="70" y="360" width="280" height="110" class="box" />
+  <text x="85" y="385" class="title">Leyenda</text>
+  <circle cx="90" cy="408" r="5" fill="#4c6ef5" />
+  <text x="105" y="412" class="small">Tráfico HTTPS público</text>
+  <circle cx="90" cy="436" r="5" fill="#34495e" />
+  <text x="105" y="440" class="small">Tráfico interno (TCP / DB)</text>
+</svg>

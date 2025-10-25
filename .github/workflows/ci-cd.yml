@@ -1,0 +1,67 @@
+name: CI/CD - sistema
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Build, Lint and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test -- --passWithNoTests
+
+  deploy:
+    name: Deploy to Fly.io
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --remote-only
+
+      - name: Smoke test (health)
+        env:
+          HEALTH_URL: https://sistema-api.fly.dev/api/gestion/health
+        run: |
+          set -e
+          echo "Hitting $HEALTH_URL"
+          http_code=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL")
+          if [ "$http_code" != "200" ]; then
+            echo "Health check failed with HTTP $http_code"
+            exit 1
+          fi
+          echo "Health check OK"

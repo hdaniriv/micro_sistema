@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { UsuarioEntity } from './usuario.entity';
 
@@ -16,11 +16,16 @@ export class TokenRecuperacionEntity extends BaseEntity {
   @Column({ default: false })
   usado: boolean;
 
-  @ManyToOne(() => UsuarioEntity, usuario => usuario.tokensRecuperacion)
+  @ManyToOne(() => UsuarioEntity, usuario => usuario.tokensRecuperacion, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'idUsuario' })
   usuario: UsuarioEntity;
 
-  @ManyToOne(() => UsuarioEntity, { nullable: true })
+  @ManyToOne(() => UsuarioEntity, {
+    nullable: true,
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'idUsuarioCreador' })
   usuarioCreador?: UsuarioEntity;
 }

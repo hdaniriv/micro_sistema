@@ -1,27 +1,22 @@
-import {
-  Injectable,
-  Inject,
-  UnauthorizedException,
-  BadRequestException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CryptoService } from '../../shared/utils/crypto.service';
-import { IUsuarioRepository } from '../../domain/repositories/usuario.repository.interface';
-import { IUsuarioRolRepository } from '../../domain/repositories/usuario-rol.repository.interface';
-import { IRolRepository } from '../../domain/repositories/rol.repository.interface';
-import { IIntentoAccesoRepository } from '../../domain/repositories/intento-acceso.repository.interface';
-import { IVisitaRepository } from '../../domain/repositories/visita.repository.interface';
-import { Usuario } from '../../domain/entities/usuario.entity';
+import { JwtService } from '@nestjs/jwt';
+import { plainToClass } from 'class-transformer';
 import { IntentoAcceso } from '../../domain/entities/intento-acceso.entity';
+import { Usuario } from '../../domain/entities/usuario.entity';
 import { Visita } from '../../domain/entities/visita.entity';
+import { IIntentoAccesoRepository } from '../../domain/repositories/intento-acceso.repository.interface';
+import { IRolRepository } from '../../domain/repositories/rol.repository.interface';
+import { IUsuarioRolRepository } from '../../domain/repositories/usuario-rol.repository.interface';
+import { IUsuarioRepository } from '../../domain/repositories/usuario.repository.interface';
+import { IVisitaRepository } from '../../domain/repositories/visita.repository.interface';
 import {
   LoginDto,
   LoginResponseDto,
   UsuarioResponseDto,
 } from '../../presentation/dto';
 import { JwtPayload } from '../../presentation/guards/jwt.strategy';
-import { plainToClass } from 'class-transformer';
+import { CryptoService } from '../../shared/utils/crypto.service';
 
 @Injectable()
 export class AuthService {
@@ -41,8 +36,13 @@ export class AuthService {
     private readonly configService: ConfigService
   ) {}
 
-  async login(loginDto: LoginDto, ip?: string, userAgent?: string): Promise<LoginResponseDto> {
+  async login(
+    loginDto: LoginDto,
+    ip?: string,
+    userAgent?: string
+  ): Promise<LoginResponseDto> {
     const { username, password } = loginDto;
+    const authDebug = this.configService.get<string>('AUTH_DEBUG') === 'true';
 
     try {
       // Buscar usuario por username o email
@@ -75,16 +75,37 @@ export class AuthService {
       }
 
       // Login exitoso - registrar visita
-      await this.registrarVisitaExitosa(usuario.id, usuario.username, ip, userAgent);
+      if (authDebug) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[AuthService] Credenciales válidas para usuario:',
+          usuario.username
+        );
+      }
+      await this.registrarVisitaExitosa(
+        usuario.id,
+        usuario.username,
+        ip,
+        userAgent
+      );
 
       // Obtener roles del usuario
-      const userRoles = await this.usuarioRolRepository.findByUserId(usuario.id);
+      const userRoles = await this.usuarioRolRepository.findByUserId(
+        usuario.id
+      );
       const roles = await Promise.all(
         userRoles.map(async ur => {
           const rol = await this.rolRepository.findById(ur.idRol);
           return rol?.nombre || '';
         })
       );
+      if (authDebug) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[AuthService] Roles resueltos:',
+          roles.filter(r => r !== '')
+        );
+      }
 
       // Generar tokens
       const payload: JwtPayload = {
@@ -94,11 +115,36 @@ export class AuthService {
         roles: roles.filter(role => role !== ''),
       };
 
+      if (authDebug) {
+        // eslint-disable-next-line no-console
+        console.log('[AuthService] Firmando access token...');
+      }
       const accessToken = this.jwtService.sign(payload);
+      if (authDebug) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[AuthService] Access token firmado. Firmando refresh token...'
+        );
+      }
+      const refreshSecret =
+        this.configService.get<string>('JWT_REFRESH_SECRET');
+      const refreshExp = this.configService.get<string>(
+        'JWT_REFRESH_EXPIRATION'
+      );
+      if (!refreshSecret && authDebug) {
+        // eslint-disable-next-line no-console
+        console.error('[AuthService] JWT_REFRESH_SECRET no definido');
+      }
       const refreshToken = this.jwtService.sign(payload, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION'),
+        secret: refreshSecret,
+        expiresIn: refreshExp,
       });
+      if (authDebug) {
+        // eslint-disable-next-line no-console
+        console.log(
+          '[AuthService] Refresh token firmado. Preparando respuesta...'
+        );
+      }
 
       // Convertir usuario a DTO
       const userDto = plainToClass(UsuarioResponseDto, usuario, {
@@ -112,12 +158,18 @@ export class AuthService {
         expiresIn: this.getTokenExpirationSeconds(),
         user: userDto,
       };
-
     } catch (error) {
       // Si ya se lanzó una excepción controlada, la re-lanzamos
       if (error instanceof UnauthorizedException) {
         throw error;
       }
+      // Log de diagnóstico
+      // eslint-disable-next-line no-console
+      console.error(
+        'AuthService.login error:',
+        error?.message || error,
+        error?.stack
+      );
       // Para cualquier otro error, registrar intento fallido
       await this.registrarIntentoFallido(username, password, ip, userAgent);
       throw new UnauthorizedException('Error interno del servidor');
@@ -198,7 +250,7 @@ export class AuthService {
         ip,
         userAgent
       );
-      
+
       await this.intentoAccesoRepository.create(intentoAcceso);
     } catch (error) {
       // Si falla el registro del intento, no interrumpir el flujo principal
@@ -213,13 +265,8 @@ export class AuthService {
     userAgent?: string
   ): Promise<void> {
     try {
-      const visita = new Visita(
-        idUsuario,
-        username,
-        ip,
-        userAgent
-      );
-      
+      const visita = new Visita(idUsuario, username, ip, userAgent);
+
       await this.visitaRepository.create(visita);
     } catch (error) {
       // Si falla el registro de la visita, no interrumpir el flujo principal

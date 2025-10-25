@@ -1,9 +1,8 @@
-import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { UsuarioRolEntity } from './usuario-rol.entity';
 import { SesionEntity } from './sesion.entity';
-import { IntentoAccesoEntity } from './intento-acceso.entity';
 import { TokenRecuperacionEntity } from './token-recuperacion.entity';
+import { UsuarioRolEntity } from './usuario-rol.entity';
 import { VisitaEntity } from './visita.entity';
 
 @Entity('Usuario')
@@ -23,7 +22,10 @@ export class UsuarioEntity extends BaseEntity {
   @Column({ default: true })
   activo: boolean;
 
-  @ManyToOne(() => UsuarioEntity, { nullable: true })
+  @ManyToOne(() => UsuarioEntity, {
+    nullable: true,
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'idUsuarioCreador' })
   usuarioCreador?: UsuarioEntity;
 
@@ -32,8 +34,6 @@ export class UsuarioEntity extends BaseEntity {
 
   @OneToMany(() => SesionEntity, sesion => sesion.usuario)
   sesiones: SesionEntity[];
-
-
 
   @OneToMany(() => TokenRecuperacionEntity, token => token.usuario)
   tokensRecuperacion: TokenRecuperacionEntity[];

@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { UsuarioEntity } from './usuario.entity';
 
 @Entity('Visita')
@@ -21,7 +27,9 @@ export class VisitaEntity {
   @Column({ length: 255, nullable: true })
   dispositivo?: string;
 
-  @ManyToOne(() => UsuarioEntity, usuario => usuario.visitas)
+  @ManyToOne(() => UsuarioEntity, usuario => usuario.visitas, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'idUsuario' })
   usuario: UsuarioEntity;
 }

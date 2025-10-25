@@ -16,6 +16,14 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
   constructor(private configService: ConfigService) {}
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
+    const dbSslEnabled =
+      this.configService.get<string>('DB_SSL', 'false') === 'true';
+    const caRaw = this.configService.get<string>('MYSQL_CA');
+    const caB64 = this.configService.get<string>('MYSQL_CA_B64');
+    const ca =
+      caRaw ??
+      (caB64 ? Buffer.from(caB64, 'base64').toString('utf8') : undefined);
+
     return {
       type: 'mysql',
       host: this.configService.get<string>('DB_HOST'),
@@ -32,15 +40,24 @@ export class DatabaseConfigService implements TypeOrmOptionsFactory {
         TokenRecuperacionEntity,
         VisitaEntity,
       ],
-      synchronize: this.configService.get<string>('NODE_ENV') === 'development',
-      logging: ['error'],
+      // Permitir sincronización controlada en entornos no desarrollo usando DB_SYNC=true
+      synchronize:
+        this.configService.get<string>('NODE_ENV') === 'development' ||
+        this.configService.get<string>('DB_SYNC', 'false') === 'true',
+      logging:
+        this.configService.get<string>('DB_LOG', 'false') === 'true'
+          ? 'all'
+          : ['error'],
       timezone: 'Z',
       charset: 'utf8mb4',
-      // SSL para proveedores como PlanetScale; activar con DB_SSL=true
-      ssl:
-        this.configService.get<string>('DB_SSL', 'false') === 'true'
-          ? { rejectUnauthorized: true }
-          : undefined,
+      // SSL para proveedores como Aiven/PlanetScale; activar con DB_SSL=true
+      // Si hay CA (MYSQL_CA o MYSQL_CA_B64) la usamos con verificación estricta
+      // Si no hay CA pero DB_SSL=true, hacemos fallback a no verificar (demo)
+      ssl: dbSslEnabled
+        ? ca
+          ? { ca, rejectUnauthorized: true }
+          : { rejectUnauthorized: false }
+        : undefined,
       extra: {
         connectionLimit: 10,
       },

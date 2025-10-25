@@ -1,7 +1,7 @@
-import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
-import { UsuarioEntity } from './usuario.entity';
 import { UsuarioRolEntity } from './usuario-rol.entity';
+import { UsuarioEntity } from './usuario.entity';
 
 @Entity('Rol')
 export class RolEntity extends BaseEntity {
@@ -11,7 +11,10 @@ export class RolEntity extends BaseEntity {
   @Column({ length: 200, nullable: true })
   descripcion?: string;
 
-  @ManyToOne(() => UsuarioEntity, { nullable: true })
+  @ManyToOne(() => UsuarioEntity, {
+    nullable: true,
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'idUsuarioCreador' })
   usuarioCreador?: UsuarioEntity;
 

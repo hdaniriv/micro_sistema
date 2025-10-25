@@ -1,6 +1,6 @@
 # fly.toml para API Sistema (HTTP)
 app = "sistema-api"
-primary_region = "mia"
+primary_region = "dfw"
 kill_signal = "SIGINT"
 kill_timeout = 5
 
